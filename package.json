@@ -1,0 +1,16 @@
+{
+  "name": "dental-booking",
+  "private": true,
+  "packageManager": "pnpm@11.5.0",
+  "scripts": {
+    "dev:api": "corepack pnpm --filter @dental-booking/api start:dev",
+    "dev:web": "corepack pnpm --filter @dental-booking/web dev",
+    "build": "corepack pnpm --filter @dental-booking/shared build && corepack pnpm --filter @dental-booking/api build && corepack pnpm --filter @dental-booking/web build",
+    "prisma:generate": "corepack pnpm --filter @dental-booking/api prisma:generate",
+    "prisma:migrate": "corepack pnpm --filter @dental-booking/api prisma:migrate",
+    "prisma:seed": "corepack pnpm --filter @dental-booking/api prisma:seed"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
