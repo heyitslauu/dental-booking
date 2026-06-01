@@ -1,3 +1,4 @@
+import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import { BookingPage } from "../pages/BookingPage";
 
 function HomePage() {
@@ -14,12 +15,12 @@ function HomePage() {
           The frontend shell is ready. Backend APIs now own clinics, services,
           staff, patients, and appointments.
         </p>
-        <a
+        <Link
           className="mt-8 inline-flex w-fit rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
-          href="/book"
+          to="/book"
         >
           Start booking
-        </a>
+        </Link>
       </section>
     </main>
   );
@@ -33,27 +34,25 @@ function NotFoundPage() {
           Page not found
         </p>
         <h1 className="mt-3 text-3xl font-semibold">This page is not ready.</h1>
-        <a
+        <Link
           className="mt-6 inline-flex rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
-          href="/book"
+          to="/book"
         >
           Go to booking
-        </a>
+        </Link>
       </section>
     </main>
   );
 }
 
 export function AppRouter() {
-  const path = window.location.pathname.replace(/\/+$/, "") || "/";
-
-  if (path === "/") {
-    return <HomePage />;
-  }
-
-  if (path === "/book") {
-    return <BookingPage />;
-  }
-
-  return <NotFoundPage />;
+  return (
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <Routes>
+        <Route element={<HomePage />} path="/" />
+        <Route element={<BookingPage />} path="/book" />
+        <Route element={<NotFoundPage />} path="*" />
+      </Routes>
+    </BrowserRouter>
+  );
 }

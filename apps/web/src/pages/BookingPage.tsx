@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { BookingFlow } from "../features/booking/components/BookingFlow";
 
 export function BookingPage() {
@@ -5,9 +6,9 @@ export function BookingPage() {
     <main className="min-h-screen bg-zinc-50 text-zinc-950">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-8 md:py-12">
         <header className="max-w-3xl">
-          <a className="text-sm font-medium text-teal-700" href="/">
+          <Link className="text-sm font-medium text-teal-700" to="/">
             Dental Booking
-          </a>
+          </Link>
           <h1 className="mt-4 text-3xl font-semibold tracking-normal md:text-4xl">
             Book an appointment
           </h1>
