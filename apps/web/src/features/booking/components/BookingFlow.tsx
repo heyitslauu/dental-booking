@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { getClinics } from "../../clinics/api";
-import type { Clinic } from "../types";
+import { getClinicServices, getClinics } from "../../clinics/api";
+import type { Clinic, ClinicService } from "../types";
 import { BranchSelection } from "./BranchSelection";
+import { ServiceSelection } from "./ServiceSelection";
 
 const bookingSteps = [
   {
@@ -35,7 +36,14 @@ export function BookingFlow() {
   const [clinicsError, setClinicsError] = useState<string | null>(null);
   const [isLoadingClinics, setIsLoadingClinics] = useState(true);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
+  const [selectedService, setSelectedService] = useState<ClinicService | null>(
+    null
+  );
+  const [services, setServices] = useState<ClinicService[]>([]);
+  const [servicesError, setServicesError] = useState<string | null>(null);
+  const [isLoadingServices, setIsLoadingServices] = useState(false);
+  const [clinicsReloadKey, setClinicsReloadKey] = useState(0);
+  const [servicesReloadKey, setServicesReloadKey] = useState(0);
 
   useEffect(() => {
     let isCurrent = true;
@@ -79,7 +87,56 @@ export function BookingFlow() {
     return () => {
       isCurrent = false;
     };
-  }, [reloadKey]);
+  }, [clinicsReloadKey]);
+
+  useEffect(() => {
+    setSelectedService(null);
+  }, [selectedClinic?.id]);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadServices(clinicId: string) {
+      setIsLoadingServices(true);
+      setServicesError(null);
+
+      try {
+        const nextServices = await getClinicServices(clinicId);
+
+        if (!isCurrent) {
+          return;
+        }
+
+        setServices(nextServices);
+      } catch (error) {
+        if (!isCurrent) {
+          return;
+        }
+
+        setServices([]);
+        setServicesError(
+          error instanceof Error ? error.message : "Unexpected error."
+        );
+      } finally {
+        if (isCurrent) {
+          setIsLoadingServices(false);
+        }
+      }
+    }
+
+    if (!selectedClinic) {
+      setServices([]);
+      setServicesError(null);
+      setIsLoadingServices(false);
+      return;
+    }
+
+    loadServices(selectedClinic.id);
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [selectedClinic, servicesReloadKey]);
 
   return (
     <section className="grid gap-4 md:grid-cols-[240px_minmax(0,1fr)]">
@@ -102,6 +159,12 @@ export function BookingFlow() {
           <p className="mt-1 text-sm font-medium text-zinc-900">
             {selectedClinic?.name ?? "None yet"}
           </p>
+          <p className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
+            Selected service
+          </p>
+          <p className="mt-1 text-sm font-medium text-zinc-900">
+            {selectedService?.service.name ?? "None yet"}
+          </p>
         </div>
       </aside>
 
@@ -117,13 +180,31 @@ export function BookingFlow() {
             clinics={clinics}
             error={clinicsError}
             isLoading={isLoadingClinics}
-            onRetry={() => setReloadKey((key) => key + 1)}
+            onRetry={() => setClinicsReloadKey((key) => key + 1)}
             onSelectClinic={setSelectedClinic}
             selectedClinic={selectedClinic}
           />
         </section>
 
-        {bookingSteps.slice(1).map((step) => (
+        <section className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2">
+          <h2 className="text-lg font-semibold text-zinc-950">
+            Service selection
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">
+            Pick a service offered by the selected branch.
+          </p>
+          <ServiceSelection
+            error={servicesError}
+            isLoading={isLoadingServices}
+            onRetry={() => setServicesReloadKey((key) => key + 1)}
+            onSelectService={setSelectedService}
+            selectedClinic={selectedClinic}
+            selectedService={selectedService}
+            services={services}
+          />
+        </section>
+
+        {bookingSteps.slice(2).map((step) => (
           <section
             className="rounded-lg border border-zinc-200 bg-white p-5"
             key={step.title}
