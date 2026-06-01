@@ -8,7 +8,10 @@
     "build": "corepack pnpm --filter @dental-booking/shared build && corepack pnpm --filter @dental-booking/api build && corepack pnpm --filter @dental-booking/web build",
     "prisma:generate": "corepack pnpm --filter @dental-booking/api prisma:generate",
     "prisma:migrate": "corepack pnpm --filter @dental-booking/api prisma:migrate",
-    "prisma:seed": "corepack pnpm --filter @dental-booking/api prisma:seed"
+    "prisma:seed": "corepack pnpm --filter @dental-booking/api prisma:seed",
+    "build:web": "pnpm --filter web build",
+    "build:api": "pnpm --filter api build",
+    "start:api": "pnpm --filter api start:prod"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
