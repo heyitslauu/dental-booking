@@ -1,5 +1,5 @@
-import { apiRequest } from "@/lib/api";
-import type { Clinic, ClinicService, ClinicStaff } from "@/features/booking/types";
+import { apiRequest } from "../../lib/api";
+import type { Clinic, ClinicService, ClinicStaff } from "../booking/types";
 
 export function getClinics() {
   return apiRequest<Clinic[]>("/clinics");

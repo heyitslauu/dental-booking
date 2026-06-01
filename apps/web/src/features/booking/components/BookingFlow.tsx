@@ -1,3 +1,8 @@
+import { useEffect, useState } from "react";
+import { getClinics } from "../../clinics/api";
+import type { Clinic } from "../types";
+import { BranchSelection } from "./BranchSelection";
+
 const bookingSteps = [
   {
     title: "Branch selection",
@@ -26,6 +31,56 @@ const bookingSteps = [
 ];
 
 export function BookingFlow() {
+  const [clinics, setClinics] = useState<Clinic[]>([]);
+  const [clinicsError, setClinicsError] = useState<string | null>(null);
+  const [isLoadingClinics, setIsLoadingClinics] = useState(true);
+  const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadClinics() {
+      setIsLoadingClinics(true);
+      setClinicsError(null);
+
+      try {
+        const nextClinics = await getClinics();
+
+        if (!isCurrent) {
+          return;
+        }
+
+        setClinics(nextClinics);
+        setSelectedClinic((currentClinic) => {
+          if (!currentClinic) {
+            return null;
+          }
+
+          return nextClinics.find((clinic) => clinic.id === currentClinic.id) ?? null;
+        });
+      } catch (error) {
+        if (!isCurrent) {
+          return;
+        }
+
+        setClinicsError(
+          error instanceof Error ? error.message : "Unexpected error."
+        );
+      } finally {
+        if (isCurrent) {
+          setIsLoadingClinics(false);
+        }
+      }
+    }
+
+    loadClinics();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [reloadKey]);
+
   return (
     <section className="grid gap-4 md:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="rounded-lg border border-zinc-200 bg-white p-4">
@@ -40,10 +95,35 @@ export function BookingFlow() {
             </li>
           ))}
         </ol>
+        <div className="mt-6 rounded-md bg-zinc-50 p-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+            Selected branch
+          </p>
+          <p className="mt-1 text-sm font-medium text-zinc-900">
+            {selectedClinic?.name ?? "None yet"}
+          </p>
+        </div>
       </aside>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {bookingSteps.map((step) => (
+        <section className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2">
+          <h2 className="text-lg font-semibold text-zinc-950">
+            Branch selection
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">
+            Choose the clinic branch for this appointment.
+          </p>
+          <BranchSelection
+            clinics={clinics}
+            error={clinicsError}
+            isLoading={isLoadingClinics}
+            onRetry={() => setReloadKey((key) => key + 1)}
+            onSelectClinic={setSelectedClinic}
+            selectedClinic={selectedClinic}
+          />
+        </section>
+
+        {bookingSteps.slice(1).map((step) => (
           <section
             className="rounded-lg border border-zinc-200 bg-white p-5"
             key={step.title}
