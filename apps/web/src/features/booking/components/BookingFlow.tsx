@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { getClinicServices, getClinics } from "../../clinics/api";
 import type { Clinic, ClinicService, PatientDetails } from "../types";
 import { BookingReview } from "./BookingReview";
-import { BranchSelection } from "./BranchSelection";
+import { ClinicSelectionDialog } from "./ClinicSelectionDialog";
 import { DateTimeSelection } from "./DateTimeSelection";
 import {
   emptyPatientDetails,
@@ -59,6 +61,7 @@ export function BookingFlow() {
   const [clinicsError, setClinicsError] = useState<string | null>(null);
   const [isLoadingClinics, setIsLoadingClinics] = useState(true);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
+  const [isClinicDialogOpen, setIsClinicDialogOpen] = useState(true);
   const [selectedService, setSelectedService] = useState<ClinicService | null>(
     null
   );
@@ -148,6 +151,19 @@ export function BookingFlow() {
     setPatientDetails(null);
   }
 
+  function handleClinicDialogOpenChange(open: boolean) {
+    if (!selectedClinic && !open) {
+      return;
+    }
+
+    setIsClinicDialogOpen(open);
+  }
+
+  function handleSelectClinic(clinic: Clinic) {
+    setSelectedClinic(clinic);
+    setIsClinicDialogOpen(false);
+  }
+
   useEffect(() => {
     let isCurrent = true;
 
@@ -194,6 +210,19 @@ export function BookingFlow() {
   }, [selectedClinic, servicesReloadKey]);
 
   return (
+    <>
+      <ClinicSelectionDialog
+        clinics={clinics}
+        error={clinicsError}
+        isLoading={isLoadingClinics}
+        onOpenChange={handleClinicDialogOpenChange}
+        onRetry={() => setClinicsReloadKey((key) => key + 1)}
+        onSelectClinic={handleSelectClinic}
+        open={isClinicDialogOpen || !selectedClinic}
+        selectedClinic={selectedClinic}
+      />
+
+      {!selectedClinic ? null : (
     <section className="grid gap-4 md:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="rounded-lg border border-zinc-200 bg-white p-4">
         <p className="text-sm font-medium text-zinc-900">Booking steps</p>
@@ -244,24 +273,28 @@ export function BookingFlow() {
       </aside>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <section
-          className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2"
-          id="booking-branch"
-        >
-          <h2 className="text-lg font-semibold text-zinc-950">
-            Branch selection
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">
-            Choose the clinic branch for this appointment.
-          </p>
-          <BranchSelection
-            clinics={clinics}
-            error={clinicsError}
-            isLoading={isLoadingClinics}
-            onRetry={() => setClinicsReloadKey((key) => key + 1)}
-            onSelectClinic={setSelectedClinic}
-            selectedClinic={selectedClinic}
-          />
+        <section className="md:col-span-2" id="booking-branch">
+          <Card>
+            <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
+              <div>
+                <CardTitle>Selected clinic</CardTitle>
+                <p className="mt-2 text-sm leading-6 text-zinc-600">
+                  {selectedClinic.name}
+                </p>
+              </div>
+              <Button
+                onClick={() => setIsClinicDialogOpen(true)}
+                type="button"
+                variant="outline"
+              >
+                Change
+              </Button>
+            </CardHeader>
+            <CardContent className="grid gap-2 text-sm text-zinc-600 sm:grid-cols-2">
+              <p>{selectedClinic.address ?? "Address to be confirmed"}</p>
+              <p>{selectedClinic.phone ?? "Contact number to be confirmed"}</p>
+            </CardContent>
+          </Card>
         </section>
 
         <section
@@ -358,5 +391,7 @@ export function BookingFlow() {
         ))}
       </div>
     </section>
+      )}
+    </>
   );
 }
