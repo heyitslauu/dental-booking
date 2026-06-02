@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { getClinicServices, getClinics } from "../../clinics/api";
-import type { Clinic, ClinicService } from "../types";
+import type { Clinic, ClinicService, PatientDetails } from "../types";
+import { BookingReview } from "./BookingReview";
 import { BranchSelection } from "./BranchSelection";
 import { DateTimeSelection } from "./DateTimeSelection";
+import {
+  emptyPatientDetails,
+  PatientDetailsForm
+} from "./PatientDetailsForm";
 import { ServiceSelection } from "./ServiceSelection";
 
 const bookingSteps = [
@@ -62,6 +67,11 @@ export function BookingFlow() {
   const [isLoadingServices, setIsLoadingServices] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [patientDetailsDraft, setPatientDetailsDraft] =
+    useState<PatientDetails>(emptyPatientDetails);
+  const [patientDetails, setPatientDetails] = useState<PatientDetails | null>(
+    null
+  );
   const [clinicsReloadKey, setClinicsReloadKey] = useState(0);
   const [servicesReloadKey, setServicesReloadKey] = useState(0);
   const minDate = useMemo(() => getTodayDateValue(), []);
@@ -131,6 +141,11 @@ export function BookingFlow() {
     }
 
     setSelectedDate(date);
+  }
+
+  function handleChangePatientDetails(details: PatientDetails) {
+    setPatientDetailsDraft(details);
+    setPatientDetails(null);
   }
 
   useEffect(() => {
@@ -217,11 +232,22 @@ export function BookingFlow() {
           <p className="mt-1 text-sm font-medium text-zinc-900">
             {selectedTime || "None yet"}
           </p>
+          <p className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
+            Patient
+          </p>
+          <p className="mt-1 text-sm font-medium text-zinc-900">
+            {patientDetails
+              ? `${patientDetails.firstName} ${patientDetails.lastName}`
+              : "None yet"}
+          </p>
         </div>
       </aside>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <section className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2">
+        <section
+          className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2"
+          id="booking-branch"
+        >
           <h2 className="text-lg font-semibold text-zinc-950">
             Branch selection
           </h2>
@@ -238,7 +264,10 @@ export function BookingFlow() {
           />
         </section>
 
-        <section className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2">
+        <section
+          className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2"
+          id="booking-service"
+        >
           <h2 className="text-lg font-semibold text-zinc-950">
             Service selection
           </h2>
@@ -256,7 +285,10 @@ export function BookingFlow() {
           />
         </section>
 
-        <section className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2">
+        <section
+          className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2"
+          id="booking-date-time"
+        >
           <h2 className="text-lg font-semibold text-zinc-950">
             Date/time selection
           </h2>
@@ -275,7 +307,42 @@ export function BookingFlow() {
           />
         </section>
 
-        {bookingSteps.slice(3).map((step) => (
+        <section
+          className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2"
+          id="booking-patient"
+        >
+          <h2 className="text-lg font-semibold text-zinc-950">
+            Patient details
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">
+            Enter the guest patient profile and contact details.
+          </p>
+          <PatientDetailsForm
+            canEnterDetails={Boolean(selectedClinic && selectedService && startAt)}
+            details={patientDetailsDraft}
+            onChangeDetails={handleChangePatientDetails}
+            onSaveDetails={setPatientDetails}
+            savedDetails={patientDetails}
+          />
+        </section>
+
+        <section
+          className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2"
+          id="booking-review"
+        >
+          <h2 className="text-lg font-semibold text-zinc-950">Review</h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">
+            Review the appointment details before confirming.
+          </p>
+          <BookingReview
+            patientDetails={patientDetails}
+            selectedClinic={selectedClinic}
+            selectedService={selectedService}
+            startAt={startAt}
+          />
+        </section>
+
+        {bookingSteps.slice(5).map((step) => (
           <section
             className="rounded-lg border border-zinc-200 bg-white p-5"
             key={step.title}

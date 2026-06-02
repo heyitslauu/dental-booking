@@ -78,6 +78,15 @@ export type CreateGuestPatientPayload = {
   birthDate?: string;
 };
 
+export type PatientDetails = {
+  firstName: string;
+  lastName: string;
+  contactNumber: string;
+  email: string;
+  birthDate: string;
+  notes: string;
+};
+
 export type CreateAppointmentPayload = {
   clinicId: string;
   serviceId: string;
