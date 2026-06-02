@@ -13,30 +13,9 @@ import {
 import { ServiceSelection } from "./ServiceSelection";
 
 const bookingSteps = [
-  {
-    title: "Branch selection",
-    description: "Clinic choices will load from the branch-aware clinic API."
-  },
-  {
-    title: "Service selection",
-    description: "Available services will update after a branch is selected."
-  },
-  {
-    title: "Date/time selection",
-    description: "Guests will choose an appointment slot in this step."
-  },
-  {
-    title: "Patient details",
-    description: "Guest contact and patient profile fields will live here."
-  },
-  {
-    title: "Review",
-    description: "Selected branch, service, time, and patient details appear here."
-  },
-  {
-    title: "Confirmation",
-    description: "The final success state will show after appointment creation."
-  }
+  "Select Appointment",
+  "Your Details",
+  "Review and Confirm Appointment"
 ];
 
 function getTodayDateValue() {
@@ -53,7 +32,13 @@ function getStartAt(date: string, time: string) {
     return null;
   }
 
-  return new Date(`${date}T${time}:00`).toISOString();
+  const startAt = new Date(`${date}T${time}:00`);
+
+  if (Number.isNaN(startAt.getTime())) {
+    return null;
+  }
+
+  return startAt.toISOString();
 }
 
 export function BookingFlow() {
@@ -62,6 +47,7 @@ export function BookingFlow() {
   const [isLoadingClinics, setIsLoadingClinics] = useState(true);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [isClinicDialogOpen, setIsClinicDialogOpen] = useState(true);
+  const [activeStep, setActiveStep] = useState(0);
   const [selectedService, setSelectedService] = useState<ClinicService | null>(
     null
   );
@@ -81,6 +67,9 @@ export function BookingFlow() {
   const startAt = useMemo(
     () => getStartAt(selectedDate, selectedTime),
     [selectedDate, selectedTime]
+  );
+  const isSelectAppointmentComplete = Boolean(
+    selectedService && selectedDate && selectedTime && startAt
   );
 
   useEffect(() => {
@@ -162,6 +151,19 @@ export function BookingFlow() {
   function handleSelectClinic(clinic: Clinic) {
     setSelectedClinic(clinic);
     setIsClinicDialogOpen(false);
+    setActiveStep(0);
+  }
+
+  function goToPreviousStep() {
+    setActiveStep((step) => Math.max(step - 1, 0));
+  }
+
+  function goToNextStep() {
+    if (activeStep === 0 && !isSelectAppointmentComplete) {
+      return;
+    }
+
+    setActiveStep((step) => Math.min(step + 1, bookingSteps.length - 1));
   }
 
   useEffect(() => {
@@ -223,62 +225,12 @@ export function BookingFlow() {
       />
 
       {!selectedClinic ? null : (
-    <section className="grid gap-4 md:grid-cols-[240px_minmax(0,1fr)]">
-      <aside className="rounded-lg border border-zinc-200 bg-white p-4">
-        <p className="text-sm font-medium text-zinc-900">Booking steps</p>
-        <ol className="mt-4 space-y-3">
-          {bookingSteps.map((step, index) => (
-            <li className="flex gap-3 text-sm" key={step.title}>
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-700 text-xs font-semibold text-white">
-                {index + 1}
-              </span>
-              <span className="pt-0.5 text-zinc-700">{step.title}</span>
-            </li>
-          ))}
-        </ol>
-        <div className="mt-6 rounded-md bg-zinc-50 p-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Selected branch
-          </p>
-          <p className="mt-1 text-sm font-medium text-zinc-900">
-            {selectedClinic?.name ?? "None yet"}
-          </p>
-          <p className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Selected service
-          </p>
-          <p className="mt-1 text-sm font-medium text-zinc-900">
-            {selectedService?.service.name ?? "None yet"}
-          </p>
-          <p className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Selected date
-          </p>
-          <p className="mt-1 text-sm font-medium text-zinc-900">
-            {selectedDate || "None yet"}
-          </p>
-          <p className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Selected time
-          </p>
-          <p className="mt-1 text-sm font-medium text-zinc-900">
-            {selectedTime || "None yet"}
-          </p>
-          <p className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Patient
-          </p>
-          <p className="mt-1 text-sm font-medium text-zinc-900">
-            {patientDetails
-              ? `${patientDetails.firstName} ${patientDetails.lastName}`
-              : "None yet"}
-          </p>
-        </div>
-      </aside>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <section className="md:col-span-2" id="booking-branch">
+        <section className="grid gap-4">
           <Card>
             <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
               <div>
                 <CardTitle>Selected clinic</CardTitle>
-                <p className="mt-2 text-sm leading-6 text-zinc-600">
+                <p className="mt-2 text-sm font-medium text-zinc-950">
                   {selectedClinic.name}
                 </p>
               </div>
@@ -295,102 +247,140 @@ export function BookingFlow() {
               <p>{selectedClinic.phone ?? "Contact number to be confirmed"}</p>
             </CardContent>
           </Card>
-        </section>
 
-        <section
-          className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2"
-          id="booking-service"
-        >
-          <h2 className="text-lg font-semibold text-zinc-950">
-            Service selection
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">
-            Pick a service offered by the selected branch.
-          </p>
-          <ServiceSelection
-            error={servicesError}
-            isLoading={isLoadingServices}
-            onRetry={() => setServicesReloadKey((key) => key + 1)}
-            onSelectService={setSelectedService}
-            selectedClinic={selectedClinic}
-            selectedService={selectedService}
-            services={services}
-          />
-        </section>
+          <Card>
+            <CardHeader>
+              <ol className="grid gap-3 md:grid-cols-3">
+                {bookingSteps.map((step, index) => {
+                  const isCurrent = activeStep === index;
+                  const isComplete = activeStep > index;
 
-        <section
-          className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2"
-          id="booking-date-time"
-        >
-          <h2 className="text-lg font-semibold text-zinc-950">
-            Date/time selection
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">
-            Choose an appointment date and time.
-          </p>
-          <DateTimeSelection
-            minDate={minDate}
-            onSelectDate={handleSelectDate}
-            onSelectTime={setSelectedTime}
-            selectedClinic={selectedClinic}
-            selectedDate={selectedDate}
-            selectedService={selectedService}
-            selectedTime={selectedTime}
-            startAt={startAt}
-          />
-        </section>
+                  return (
+                    <li
+                      className={`flex items-center gap-3 rounded-md border p-3 text-sm ${
+                        isCurrent
+                          ? "border-teal-700 bg-teal-50 text-teal-950"
+                          : isComplete
+                            ? "border-teal-100 bg-white text-zinc-700"
+                            : "border-zinc-200 bg-white text-zinc-500"
+                      }`}
+                      key={step}
+                    >
+                      <span
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                          isCurrent || isComplete
+                            ? "bg-teal-700 text-white"
+                            : "bg-zinc-100 text-zinc-500"
+                        }`}
+                      >
+                        {index + 1}
+                      </span>
+                      <span className="font-medium">{step}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </CardHeader>
 
-        <section
-          className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2"
-          id="booking-patient"
-        >
-          <h2 className="text-lg font-semibold text-zinc-950">
-            Patient details
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">
-            Enter the guest patient profile and contact details.
-          </p>
-          <PatientDetailsForm
-            canEnterDetails={Boolean(selectedClinic && selectedService && startAt)}
-            details={patientDetailsDraft}
-            onChangeDetails={handleChangePatientDetails}
-            onSaveDetails={setPatientDetails}
-            savedDetails={patientDetails}
-          />
-        </section>
+            <CardContent>
+              {activeStep === 0 ? (
+                <div className="grid gap-6">
+                  <section id="booking-service">
+                    <h2 className="text-lg font-semibold text-zinc-950">
+                      Select Appointment
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-600">
+                      Pick a service and choose an appointment date and time.
+                    </p>
+                    <ServiceSelection
+                      error={servicesError}
+                      isLoading={isLoadingServices}
+                      onRetry={() => setServicesReloadKey((key) => key + 1)}
+                      onSelectService={setSelectedService}
+                      selectedClinic={selectedClinic}
+                      selectedService={selectedService}
+                      services={services}
+                    />
+                  </section>
 
-        <section
-          className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2"
-          id="booking-review"
-        >
-          <h2 className="text-lg font-semibold text-zinc-950">Review</h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">
-            Review the appointment details before confirming.
-          </p>
-          <BookingReview
-            patientDetails={patientDetails}
-            selectedClinic={selectedClinic}
-            selectedService={selectedService}
-            startAt={startAt}
-          />
-        </section>
+                  {selectedService ? (
+                    <section id="booking-date-time">
+                      <DateTimeSelection
+                        minDate={minDate}
+                        onSelectDate={handleSelectDate}
+                        onSelectTime={setSelectedTime}
+                        selectedClinic={selectedClinic}
+                        selectedDate={selectedDate}
+                        selectedService={selectedService}
+                        selectedTime={selectedTime}
+                        startAt={startAt}
+                      />
+                    </section>
+                  ) : null}
+                </div>
+              ) : null}
 
-        {bookingSteps.slice(5).map((step) => (
-          <section
-            className="rounded-lg border border-zinc-200 bg-white p-5"
-            key={step.title}
-          >
-            <h2 className="text-lg font-semibold text-zinc-950">{step.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-zinc-600">
-              {step.description}
-            </p>
-            <div className="mt-5 rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 text-sm text-zinc-500">
-              Placeholder
-            </div>
-          </section>
-        ))}
-      </div>
-    </section>
+              {activeStep === 1 ? (
+                <section id="booking-patient">
+                  <h2 className="text-lg font-semibold text-zinc-950">
+                    Your Details
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-zinc-600">
+                    Enter the guest patient profile and contact details.
+                  </p>
+                  <PatientDetailsForm
+                    canEnterDetails={Boolean(
+                      selectedClinic && selectedService && startAt
+                    )}
+                    details={patientDetailsDraft}
+                    onChangeDetails={handleChangePatientDetails}
+                    onSaveDetails={setPatientDetails}
+                    savedDetails={patientDetails}
+                  />
+                </section>
+              ) : null}
+
+              {activeStep === 2 ? (
+                <section id="booking-review">
+                  <h2 className="text-lg font-semibold text-zinc-950">
+                    Review and Confirm Appointment
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-zinc-600">
+                    Review the appointment details before confirming.
+                  </p>
+                  <BookingReview
+                    onEditStep={setActiveStep}
+                    patientDetails={patientDetails}
+                    selectedClinic={selectedClinic}
+                    selectedService={selectedService}
+                    startAt={startAt}
+                  />
+                </section>
+              ) : null}
+
+              <div className="mt-6 flex items-center justify-between border-t border-zinc-200 pt-4">
+                <Button
+                  disabled={activeStep === 0}
+                  onClick={goToPreviousStep}
+                  type="button"
+                  variant="outline"
+                >
+                  Back
+                </Button>
+                <Button
+                  disabled={
+                    activeStep === bookingSteps.length - 1 ||
+                    (activeStep === 0 && !isSelectAppointmentComplete)
+                  }
+                  onClick={goToNextStep}
+                  type="button"
+                >
+                  Next
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       )}
     </>
   );

@@ -6,6 +6,7 @@ type BookingReviewProps = {
   selectedClinic: Clinic | null;
   selectedService: ClinicService | null;
   startAt: string | null;
+  onEditStep?: (step: number) => void;
 };
 
 function formatPrice(priceCents: number) {
@@ -28,47 +29,21 @@ function formatDateTime(value: string) {
   }).format(date);
 }
 
-function getEndAt(startAt: string | null, selectedService: ClinicService | null) {
-  if (!startAt || !selectedService) {
-    return null;
-  }
-
-  const durationMinutes = selectedService.service.durationMinutes;
-
-  if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
-    return null;
-  }
-
-  const endAt = new Date(startAt);
-
-  if (Number.isNaN(endAt.getTime())) {
-    return null;
-  }
-
-  endAt.setMinutes(endAt.getMinutes() + durationMinutes);
-
-  if (Number.isNaN(endAt.getTime())) {
-    return null;
-  }
-
-  return endAt.toISOString();
-}
-
 export function BookingReview({
   patientDetails,
   selectedClinic,
   selectedService,
-  startAt
+  startAt,
+  onEditStep
 }: BookingReviewProps) {
-  const endAt = getEndAt(startAt, selectedService);
   const isComplete = Boolean(
-    selectedClinic && selectedService && startAt && endAt && patientDetails
+    selectedClinic && selectedService && startAt && patientDetails
   );
 
   return (
     <div className="mt-5 grid gap-4">
       <div className="grid gap-4 lg:grid-cols-2">
-        <ReviewCard editHref="#booking-branch" title="Clinic">
+        <ReviewCard title="Clinic">
           {selectedClinic ? (
             <>
               <SummaryRow label="Branch" value={selectedClinic.name} />
@@ -86,7 +61,7 @@ export function BookingReview({
           )}
         </ReviewCard>
 
-        <ReviewCard editHref="#booking-service" title="Service">
+        <ReviewCard onEdit={() => onEditStep?.(0)} title="Service">
           {selectedService ? (
             <>
               <SummaryRow
@@ -111,18 +86,15 @@ export function BookingReview({
           )}
         </ReviewCard>
 
-        <ReviewCard editHref="#booking-date-time" title="Appointment">
-          {startAt && endAt ? (
-            <>
-              <SummaryRow label="Starts" value={formatDateTime(startAt)} />
-              <SummaryRow label="Ends" value={formatDateTime(endAt)} />
-            </>
+        <ReviewCard onEdit={() => onEditStep?.(0)} title="Appointment">
+          {startAt ? (
+            <SummaryRow label="Starts" value={formatDateTime(startAt)} />
           ) : (
             <MissingText>Select an appointment date and time.</MissingText>
           )}
         </ReviewCard>
 
-        <ReviewCard editHref="#booking-patient" title="Patient">
+        <ReviewCard onEdit={() => onEditStep?.(1)} title="Patient">
           {patientDetails ? (
             <>
               <SummaryRow
@@ -172,21 +144,24 @@ export function BookingReview({
 
 type ReviewCardProps = {
   children: ReactNode;
-  editHref: string;
+  onEdit?: () => void;
   title: string;
 };
 
-function ReviewCard({ children, editHref, title }: ReviewCardProps) {
+function ReviewCard({ children, onEdit, title }: ReviewCardProps) {
   return (
     <div className="rounded-md border border-zinc-200 bg-white p-4">
       <div className="flex items-start justify-between gap-4">
         <h3 className="text-sm font-semibold text-zinc-950">{title}</h3>
-        <a
-          className="text-sm font-medium text-teal-700 hover:text-teal-800"
-          href={editHref}
-        >
-          Edit
-        </a>
+        {onEdit ? (
+          <button
+            className="text-sm font-medium text-teal-700 hover:text-teal-800"
+            onClick={onEdit}
+            type="button"
+          >
+            Edit
+          </button>
+        ) : null}
       </div>
       <div className="mt-4 grid gap-3">{children}</div>
     </div>

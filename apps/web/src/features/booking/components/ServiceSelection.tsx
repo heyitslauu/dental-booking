@@ -1,3 +1,4 @@
+import { Label } from "../../../components/ui/label";
 import type { Clinic, ClinicService } from "../types";
 
 type ServiceSelectionProps = {
@@ -7,7 +8,7 @@ type ServiceSelectionProps = {
   selectedService: ClinicService | null;
   services: ClinicService[];
   onRetry: () => void;
-  onSelectService: (service: ClinicService) => void;
+  onSelectService: (service: ClinicService | null) => void;
 };
 
 function formatPrice(priceCents: number) {
@@ -73,46 +74,51 @@ export function ServiceSelection({
     );
   }
 
+  const selectedServiceDetails = selectedService?.service;
+
   return (
     <div className="mt-5 grid gap-3">
-      {services.map((clinicService) => {
-        const isSelected = selectedService?.id === clinicService.id;
-        const service = clinicService.service;
+      <Label className="grid gap-2" htmlFor="booking-service-select">
+        Service
+        <select
+          className="h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm font-normal text-zinc-950 outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
+          id="booking-service-select"
+          onChange={(event) => {
+            const nextService =
+              services.find((service) => service.id === event.target.value) ??
+              null;
 
-        return (
-          <button
-            aria-pressed={isSelected}
-            className={`rounded-md border p-4 text-left transition ${
-              isSelected
-                ? "border-teal-700 bg-teal-50 ring-2 ring-teal-700/20"
-                : "border-zinc-200 bg-white hover:border-teal-400"
-            }`}
-            key={clinicService.id}
-            onClick={() => onSelectService(clinicService)}
-            type="button"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-medium text-zinc-950">{service.name}</h3>
-                {service.description ? (
-                  <p className="mt-1 text-sm text-zinc-600">
-                    {service.description}
-                  </p>
-                ) : null}
-              </div>
-              <span
-                className={`rounded-full px-2 py-1 text-xs font-medium ${
-                  isSelected
-                    ? "bg-teal-700 text-white"
-                    : "bg-zinc-100 text-zinc-600"
-                }`}
-              >
-                {isSelected ? "Selected" : "Select"}
-              </span>
-            </div>
-          </button>
-        );
-      })}
+            onSelectService(nextService);
+          }}
+          value={selectedService?.id ?? ""}
+        >
+          <option value="">Select a service</option>
+          {services.map((clinicService) => (
+            <option key={clinicService.id} value={clinicService.id}>
+              {clinicService.service.name}
+            </option>
+          ))}
+        </select>
+      </Label>
+
+      {selectedServiceDetails ? (
+        <div className="rounded-md border border-zinc-200 bg-zinc-50 p-4">
+          <p className="text-sm font-medium text-zinc-950">
+            {selectedServiceDetails.name}
+          </p>
+          {selectedServiceDetails.description ? (
+            <p className="mt-1 text-sm text-zinc-600">
+              {selectedServiceDetails.description}
+            </p>
+          ) : null}
+          <p className="mt-2 text-sm text-zinc-500">
+            {selectedServiceDetails.durationMinutes} min
+            {Number.isFinite(selectedServiceDetails.priceCents)
+              ? ` · ${formatPrice(selectedServiceDetails.priceCents)}`
+              : ""}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
