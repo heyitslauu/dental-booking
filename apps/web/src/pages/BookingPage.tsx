@@ -6,15 +6,18 @@ export function BookingPage() {
     <main className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-8 md:py-12">
         <header className="max-w-3xl">
-          <Link className="text-sm font-medium text-primary" to="/">
-            Dental Booking
+          <Link
+            className="inline-flex rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-primary transition hover:bg-surface"
+            to="/"
+          >
+            Back to homepage
           </Link>
           <h1 className="mt-4 text-3xl font-semibold tracking-normal text-primary md:text-4xl">
-            Book an appointment
+            Your brighter smile starts here
           </h1>
           <p className="mt-3 text-base text-muted-foreground">
-            Choose a branch, service, schedule, and patient details. This shell
-            is ready for the guest booking flow.
+            Pick your preferred clinic, choose a treatment time, and share your
+            details in a quick guided flow.
           </p>
         </header>
 

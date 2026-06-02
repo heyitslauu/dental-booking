@@ -111,12 +111,6 @@ export function ServiceSelection({
               {selectedServiceDetails.description}
             </p>
           ) : null}
-          <p className="mt-2 text-sm text-muted-foreground">
-            {selectedServiceDetails.durationMinutes} min
-            {Number.isFinite(selectedServiceDetails.priceCents)
-              ? ` · ${formatPrice(selectedServiceDetails.priceCents)}`
-              : ""}
-          </p>
         </div>
       ) : null}
     </div>

@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "../../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
 import { getClinicServices, getClinics } from "../../clinics/api";
 import type { Clinic, ClinicService, PatientDetails } from "../types";
 import { BookingReview } from "./BookingReview";
@@ -11,14 +16,14 @@ import {
   emptyPatientDetails,
   isPatientDetailsValid,
   normalizePatientDetails,
-  PatientDetailsForm
+  PatientDetailsForm,
 } from "./PatientDetailsForm";
 import { ServiceSelection } from "./ServiceSelection";
 
 const bookingSteps = [
   "Select Appointment",
   "Your Details",
-  "Review and Confirm Appointment"
+  "Review and Confirm",
 ];
 
 function getTodayDateValue() {
@@ -54,7 +59,7 @@ export function BookingFlow() {
     useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [selectedService, setSelectedService] = useState<ClinicService | null>(
-    null
+    null,
   );
   const [services, setServices] = useState<ClinicService[]>([]);
   const [servicesError, setServicesError] = useState<string | null>(null);
@@ -64,17 +69,17 @@ export function BookingFlow() {
   const [patientDetailsDraft, setPatientDetailsDraft] =
     useState<PatientDetails>(emptyPatientDetails);
   const [patientDetails, setPatientDetails] = useState<PatientDetails | null>(
-    null
+    null,
   );
   const [clinicsReloadKey, setClinicsReloadKey] = useState(0);
   const [servicesReloadKey, setServicesReloadKey] = useState(0);
   const minDate = useMemo(() => getTodayDateValue(), []);
   const startAt = useMemo(
     () => getStartAt(selectedDate, selectedTime),
-    [selectedDate, selectedTime]
+    [selectedDate, selectedTime],
   );
   const isSelectAppointmentComplete = Boolean(
-    selectedService && selectedDate && selectedTime && startAt
+    selectedService && selectedDate && selectedTime && startAt,
   );
   const isYourDetailsComplete = isPatientDetailsValid(patientDetailsDraft);
 
@@ -98,7 +103,9 @@ export function BookingFlow() {
             return null;
           }
 
-          return nextClinics.find((clinic) => clinic.id === currentClinic.id) ?? null;
+          return (
+            nextClinics.find((clinic) => clinic.id === currentClinic.id) ?? null
+          );
         });
       } catch (error) {
         if (!isCurrent) {
@@ -106,7 +113,7 @@ export function BookingFlow() {
         }
 
         setClinicsError(
-          error instanceof Error ? error.message : "Unexpected error."
+          error instanceof Error ? error.message : "Unexpected error.",
         );
       } finally {
         if (isCurrent) {
@@ -144,7 +151,7 @@ export function BookingFlow() {
   function handleChangePatientDetails(details: PatientDetails) {
     setPatientDetailsDraft(details);
     setPatientDetails(
-      isPatientDetailsValid(details) ? normalizePatientDetails(details) : null
+      isPatientDetailsValid(details) ? normalizePatientDetails(details) : null,
     );
   }
 
@@ -209,6 +216,30 @@ export function BookingFlow() {
     setActiveStep((step) => Math.min(step + 1, bookingSteps.length - 1));
   }
 
+  function canNavigateToStep(step: number) {
+    if (step <= activeStep) {
+      return true;
+    }
+
+    if (step === 1) {
+      return isSelectAppointmentComplete;
+    }
+
+    if (step === 2) {
+      return isSelectAppointmentComplete && isYourDetailsComplete;
+    }
+
+    return false;
+  }
+
+  function handleSelectStep(step: number) {
+    if (!canNavigateToStep(step)) {
+      return;
+    }
+
+    setActiveStep(step);
+  }
+
   useEffect(() => {
     let isCurrent = true;
 
@@ -231,7 +262,7 @@ export function BookingFlow() {
 
         setServices([]);
         setServicesError(
-          error instanceof Error ? error.message : "Unexpected error."
+          error instanceof Error ? error.message : "Unexpected error.",
         );
       } finally {
         if (isCurrent) {
@@ -279,7 +310,7 @@ export function BookingFlow() {
             <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
               <div>
                 <CardTitle>Selected clinic</CardTitle>
-                <p className="mt-2 text-sm font-medium text-foreground">
+                <p className="mt-3 text-xl font-bold uppercase tracking-wide text-foreground">
                   {selectedClinic.name}
                 </p>
               </div>
@@ -297,40 +328,45 @@ export function BookingFlow() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <ol className="grid gap-3 md:grid-cols-3">
-                {bookingSteps.map((step, index) => {
-                  const isCurrent = activeStep === index;
-                  const isComplete = activeStep > index;
+          <ol className="grid grid-cols-3 gap-2">
+            {bookingSteps.map((step, index) => {
+              const isCurrent = activeStep === index;
+              const isComplete = activeStep > index;
+              const canSelect = canNavigateToStep(index);
 
-                  return (
-                    <li
-                      className={`flex items-center gap-3 rounded-md border p-3 text-sm ${
-                        isCurrent
-                          ? "border-accent bg-accent/15 text-accent-foreground"
-                          : isComplete
-                            ? "border-primary/30 bg-background text-primary"
-                            : "border-border bg-background text-muted-foreground"
+              return (
+                <li key={step}>
+                  <button
+                    className={`grid w-full justify-items-center gap-2 rounded-md border px-2 py-3 text-center text-xs transition ${
+                      isCurrent
+                        ? "border-accent bg-accent/10 text-accent-foreground"
+                        : isComplete
+                          ? "border-primary/20 bg-background text-primary"
+                          : "border-border bg-background text-muted-foreground"
+                    } ${canSelect ? "hover:border-accent" : "cursor-not-allowed opacity-60"}`}
+                    disabled={!canSelect}
+                    onClick={() => handleSelectStep(index)}
+                    type="button"
+                  >
+                    <span
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
+                        isCurrent || isComplete
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-surface text-muted-foreground"
                       }`}
-                      key={step}
                     >
-                      <span
-                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                          isCurrent || isComplete
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-surface text-muted-foreground"
-                        }`}
-                      >
-                        {index + 1}
-                      </span>
-                      <span className="font-medium">{step}</span>
-                    </li>
-                  );
-                })}
-              </ol>
-            </CardHeader>
+                      {index + 1}
+                    </span>
+                    <span className="max-w-32 font-medium leading-4">
+                      {step}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
 
+          <Card>
             <CardContent>
               {activeStep === 0 ? (
                 <div className="grid gap-6">
@@ -379,7 +415,7 @@ export function BookingFlow() {
                   </p>
                   <PatientDetailsForm
                     canEnterDetails={Boolean(
-                      selectedClinic && selectedService && startAt
+                      selectedClinic && selectedService && startAt,
                     )}
                     details={patientDetailsDraft}
                     onChangeDetails={handleChangePatientDetails}
