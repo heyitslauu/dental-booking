@@ -52,7 +52,10 @@ export function DateTimeSelection({
   return (
     <div className="mt-5 grid gap-4 sm:grid-cols-2">
       <label className="grid gap-2 text-sm font-medium text-foreground">
-        Appointment date
+        <span>
+          Appointment date{" "}
+          <span className="font-bold text-destructive">* Required</span>
+        </span>
         <input
           className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
           min={minDate}
@@ -63,7 +66,10 @@ export function DateTimeSelection({
       </label>
 
       <label className="grid gap-2 text-sm font-medium text-foreground">
-        Appointment time
+        <span>
+          Appointment time{" "}
+          <span className="font-bold text-destructive">* Required</span>
+        </span>
         <select
           className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
           onChange={(event) => onSelectTime(event.target.value)}

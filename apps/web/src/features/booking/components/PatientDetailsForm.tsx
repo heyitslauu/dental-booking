@@ -193,7 +193,12 @@ function Field({
 
   return (
     <Label className="grid gap-2">
-      {label}
+      <span>
+        {label}
+        {required ? (
+          <span className="font-bold text-destructive"> * Required</span>
+        ) : null}
+      </span>
       <Input
         aria-describedby={error ? errorId : undefined}
         aria-invalid={Boolean(error)}

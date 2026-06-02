@@ -79,7 +79,9 @@ export function ServiceSelection({
   return (
     <div className="mt-5 grid gap-3">
       <Label className="grid gap-2" htmlFor="booking-service-select">
-        Service
+        <span>
+          Service <span className="font-bold text-destructive">* Required</span>
+        </span>
         <select
           className="h-10 rounded-md border border-border bg-background px-3 text-sm font-normal text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
           id="booking-service-select"
