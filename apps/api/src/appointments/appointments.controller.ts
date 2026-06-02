@@ -18,6 +18,11 @@ export class AppointmentsController {
     return this.appointmentsService.create(dto);
   }
 
+  @Get("reference/:referenceNumber")
+  findByReferenceNumber(@Param("referenceNumber") referenceNumber: string) {
+    return this.appointmentsService.findByReferenceNumber(referenceNumber);
+  }
+
   @Patch(":id/status")
   updateStatus(
     @Param("id") id: string,
