@@ -7,7 +7,8 @@ import {
   CardTitle,
 } from "../../../components/ui/card";
 import { getClinicServices, getClinics } from "../../clinics/api";
-import type { Clinic, ClinicService, PatientDetails } from "../types";
+import { createAppointment, createGuestPatient } from "../api";
+import type { Appointment, Clinic, ClinicService, PatientDetails } from "../types";
 import { BookingReview } from "./BookingReview";
 import { ClinicChangeWarningDialog } from "./ClinicChangeWarningDialog";
 import { ClinicSelectionDialog } from "./ClinicSelectionDialog";
@@ -49,6 +50,26 @@ function getStartAt(date: string, time: string) {
   return startAt.toISOString();
 }
 
+function getEndAt(startAt: string) {
+  const endAt = new Date(startAt);
+
+  if (Number.isNaN(endAt.getTime())) {
+    return null;
+  }
+
+  endAt.setHours(endAt.getHours() + 1);
+
+  return endAt.toISOString();
+}
+
+function getSubmissionErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Booking submission failed. Please try again.";
+}
+
 export function BookingFlow() {
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [clinicsError, setClinicsError] = useState<string | null>(null);
@@ -71,6 +92,10 @@ export function BookingFlow() {
   const [patientDetails, setPatientDetails] = useState<PatientDetails | null>(
     null,
   );
+  const [createdAppointment, setCreatedAppointment] =
+    useState<Appointment | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
   const [clinicsReloadKey, setClinicsReloadKey] = useState(0);
   const [servicesReloadKey, setServicesReloadKey] = useState(0);
   const minDate = useMemo(() => getTodayDateValue(), []);
@@ -153,6 +178,7 @@ export function BookingFlow() {
     setPatientDetails(
       isPatientDetailsValid(details) ? normalizePatientDetails(details) : null,
     );
+    setSubmissionError(null);
   }
 
   function handleClinicDialogOpenChange(open: boolean) {
@@ -167,6 +193,8 @@ export function BookingFlow() {
     setSelectedClinic(clinic);
     setIsClinicDialogOpen(false);
     setActiveStep(0);
+    setSubmissionError(null);
+    setCreatedAppointment(null);
   }
 
   function handleRequestClinicChange() {
@@ -184,9 +212,61 @@ export function BookingFlow() {
     setSelectedTime("");
     setPatientDetailsDraft(emptyPatientDetails);
     setPatientDetails(null);
+    setCreatedAppointment(null);
+    setSubmissionError(null);
+    setIsSubmittingBooking(false);
     setActiveStep(0);
     setIsClinicChangeWarningOpen(false);
     setIsClinicDialogOpen(true);
+  }
+
+  async function handleConfirmBooking() {
+    if (
+      isSubmittingBooking ||
+      !selectedClinic ||
+      !selectedService ||
+      !startAt ||
+      !patientDetails
+    ) {
+      return;
+    }
+
+    const endAt = getEndAt(startAt);
+
+    if (!endAt) {
+      setSubmissionError("Select a valid appointment date and time.");
+      return;
+    }
+
+    setIsSubmittingBooking(true);
+    setSubmissionError(null);
+
+    try {
+      const guestPatient = await createGuestPatient({
+        firstName: patientDetails.firstName,
+        lastName: patientDetails.lastName,
+        phone: patientDetails.contactNumber,
+        ...(patientDetails.email ? { email: patientDetails.email } : {}),
+        ...(patientDetails.birthDate
+          ? { birthDate: patientDetails.birthDate }
+          : {}),
+      });
+
+      const appointment = await createAppointment({
+        clinicId: selectedClinic.id,
+        serviceId: selectedService.serviceId,
+        patientId: guestPatient.id,
+        startAt,
+        endAt,
+        ...(patientDetails.notes ? { notes: patientDetails.notes } : {}),
+      });
+
+      setCreatedAppointment(appointment);
+    } catch (error) {
+      setSubmissionError(getSubmissionErrorMessage(error));
+    } finally {
+      setIsSubmittingBooking(false);
+    }
   }
 
   function goToPreviousStep() {
@@ -317,147 +397,180 @@ export function BookingFlow() {
             </CardContent>
           </Card>
 
-          <ol className="grid grid-cols-3 gap-2">
-            {bookingSteps.map((step, index) => {
-              const isCurrent = activeStep === index;
-              const isComplete = activeStep > index;
-              const canSelect = canNavigateToStep(index);
+          {createdAppointment ? (
+            <Card>
+              <CardContent className="grid gap-4 py-6">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-accent-foreground">
+                    Booking confirmed
+                  </p>
+                  <h2 className="mt-2 text-2xl font-bold text-primary">
+                    Your appointment has been booked.
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    We created the guest patient profile and saved the
+                    appointment for the selected clinic.
+                  </p>
+                </div>
+                <div className="rounded-md border border-border bg-surface p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Appointment reference
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">
+                    {createdAppointment.referenceCode ??
+                      "Reference code not returned"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <ol className="grid grid-cols-3 gap-2">
+                {bookingSteps.map((step, index) => {
+                  const isCurrent = activeStep === index;
+                  const isComplete = activeStep > index;
+                  const canSelect = canNavigateToStep(index);
 
-              return (
-                <li key={step}>
-                  <button
-                    className={`grid w-full justify-items-center gap-2 rounded-md border px-2 py-3 text-center text-xs transition ${
-                      isCurrent
-                        ? "border-accent bg-accent/10 text-accent-foreground"
-                        : isComplete
-                          ? "border-primary/20 bg-background text-primary"
-                          : "border-border bg-background text-muted-foreground"
-                    } ${canSelect ? "hover:border-accent" : "cursor-not-allowed opacity-60"}`}
-                    disabled={!canSelect}
-                    onClick={() => handleSelectStep(index)}
-                    type="button"
-                  >
-                    <span
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
-                        isCurrent || isComplete
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-surface text-muted-foreground"
-                      }`}
-                    >
-                      {index + 1}
-                    </span>
-                    <span className="max-w-32 font-medium leading-4">
-                      {step}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
+                  return (
+                    <li key={step}>
+                      <button
+                        className={`grid w-full justify-items-center gap-2 rounded-md border px-2 py-3 text-center text-xs transition ${
+                          isCurrent
+                            ? "border-accent bg-accent/10 text-accent-foreground"
+                            : isComplete
+                              ? "border-primary/20 bg-background text-primary"
+                              : "border-border bg-background text-muted-foreground"
+                        } ${canSelect ? "hover:border-accent" : "cursor-not-allowed opacity-60"}`}
+                        disabled={!canSelect}
+                        onClick={() => handleSelectStep(index)}
+                        type="button"
+                      >
+                        <span
+                          className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
+                            isCurrent || isComplete
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-surface text-muted-foreground"
+                          }`}
+                        >
+                          {index + 1}
+                        </span>
+                        <span className="max-w-32 font-medium leading-4">
+                          {step}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
 
-          <Card>
-            <CardContent>
-              {activeStep === 0 ? (
-                <div className="grid gap-6">
-                  <section id="booking-service" className="py-5">
-                    <h2 className="text-lg font-semibold text-primary">
-                      Select Appointment
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Pick a service and choose an appointment date and time.
-                    </p>
-                    <ServiceSelection
-                      error={servicesError}
-                      isLoading={isLoadingServices}
-                      onRetry={() => setServicesReloadKey((key) => key + 1)}
-                      onSelectService={setSelectedService}
-                      selectedClinic={selectedClinic}
-                      selectedService={selectedService}
-                      services={services}
-                    />
-                  </section>
+              <Card>
+                <CardContent>
+                  {activeStep === 0 ? (
+                    <div className="grid gap-6">
+                      <section id="booking-service" className="py-5">
+                        <h2 className="text-lg font-semibold text-primary">
+                          Select Appointment
+                        </h2>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                          Pick a service and choose an appointment date and time.
+                        </p>
+                        <ServiceSelection
+                          error={servicesError}
+                          isLoading={isLoadingServices}
+                          onRetry={() => setServicesReloadKey((key) => key + 1)}
+                          onSelectService={setSelectedService}
+                          selectedClinic={selectedClinic}
+                          selectedService={selectedService}
+                          services={services}
+                        />
+                      </section>
 
-                  {selectedService ? (
-                    <section id="booking-date-time">
-                      <DateTimeSelection
-                        minDate={minDate}
-                        onSelectDate={handleSelectDate}
-                        onSelectTime={setSelectedTime}
-                        selectedClinic={selectedClinic}
-                        selectedDate={selectedDate}
-                        selectedService={selectedService}
-                        selectedTime={selectedTime}
-                        startAt={startAt}
+                      {selectedService ? (
+                        <section id="booking-date-time">
+                          <DateTimeSelection
+                            minDate={minDate}
+                            onSelectDate={handleSelectDate}
+                            onSelectTime={setSelectedTime}
+                            selectedClinic={selectedClinic}
+                            selectedDate={selectedDate}
+                            selectedService={selectedService}
+                            selectedTime={selectedTime}
+                            startAt={startAt}
+                          />
+                        </section>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {activeStep === 1 ? (
+                    <section id="booking-patient" className="py-5">
+                      <h2 className="text-lg font-semibold text-primary">
+                        Your Details
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        Enter the guest patient profile and contact details.
+                      </p>
+                      <PatientDetailsForm
+                        canEnterDetails={Boolean(
+                          selectedClinic && selectedService && startAt,
+                        )}
+                        details={patientDetailsDraft}
+                        onChangeDetails={handleChangePatientDetails}
                       />
                     </section>
                   ) : null}
-                </div>
-              ) : null}
 
-              {activeStep === 1 ? (
-                <section id="booking-patient" className="py-5">
-                  <h2 className="text-lg font-semibold text-primary">
-                    Your Details
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Enter the guest patient profile and contact details.
-                  </p>
-                  <PatientDetailsForm
-                    canEnterDetails={Boolean(
-                      selectedClinic && selectedService && startAt,
-                    )}
-                    details={patientDetailsDraft}
-                    onChangeDetails={handleChangePatientDetails}
-                  />
-                </section>
-              ) : null}
+                  {activeStep === 2 ? (
+                    <section id="booking-review" className="py-5">
+                      <h2 className="text-lg font-semibold text-primary">
+                        Review and Confirm Appointment
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        Review the appointment details before confirming.
+                      </p>
+                      <BookingReview
+                        isSubmitting={isSubmittingBooking}
+                        onBack={goToPreviousStep}
+                        onConfirm={handleConfirmBooking}
+                        onEditStep={setActiveStep}
+                        patientDetails={patientDetails}
+                        selectedDate={selectedDate}
+                        selectedClinic={selectedClinic}
+                        selectedService={selectedService}
+                        selectedTime={selectedTime}
+                        startAt={startAt}
+                        submissionError={submissionError}
+                      />
+                    </section>
+                  ) : null}
 
-              {activeStep === 2 ? (
-                <section id="booking-review" className="py-5">
-                  <h2 className="text-lg font-semibold text-primary">
-                    Review and Confirm Appointment
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Review the appointment details before confirming.
-                  </p>
-                  <BookingReview
-                    onBack={goToPreviousStep}
-                    onEditStep={setActiveStep}
-                    patientDetails={patientDetails}
-                    selectedDate={selectedDate}
-                    selectedClinic={selectedClinic}
-                    selectedService={selectedService}
-                    selectedTime={selectedTime}
-                    startAt={startAt}
-                  />
-                </section>
-              ) : null}
-
-              {activeStep < bookingSteps.length - 1 ? (
-                <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
-                  <Button
-                    disabled={activeStep === 0}
-                    onClick={goToPreviousStep}
-                    type="button"
-                    variant="outline"
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    disabled={
-                      activeStep === bookingSteps.length - 1 ||
-                      (activeStep === 0 && !isSelectAppointmentComplete) ||
-                      (activeStep === 1 && !isYourDetailsComplete)
-                    }
-                    onClick={goToNextStep}
-                    type="button"
-                  >
-                    Next
-                  </Button>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
+                  {activeStep < bookingSteps.length - 1 ? (
+                    <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
+                      <Button
+                        disabled={activeStep === 0}
+                        onClick={goToPreviousStep}
+                        type="button"
+                        variant="outline"
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        disabled={
+                          activeStep === bookingSteps.length - 1 ||
+                          (activeStep === 0 && !isSelectAppointmentComplete) ||
+                          (activeStep === 1 && !isYourDetailsComplete)
+                        }
+                        onClick={goToNextStep}
+                        type="button"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+            </>
+          )}
         </section>
       )}
     </>

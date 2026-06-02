@@ -5,13 +5,16 @@ import { Separator } from "../../../components/ui/separator";
 import type { Clinic, ClinicService, PatientDetails } from "../types";
 
 type BookingReviewProps = {
+  isSubmitting: boolean;
   patientDetails: PatientDetails | null;
   selectedDate: string;
   selectedClinic: Clinic | null;
   selectedService: ClinicService | null;
   selectedTime: string;
   startAt: string | null;
+  submissionError: string | null;
   onBack: () => void;
+  onConfirm: () => void;
   onEditStep?: (step: number) => void;
 };
 
@@ -49,13 +52,16 @@ function formatTime(value: string) {
 }
 
 export function BookingReview({
+  isSubmitting,
   patientDetails,
   selectedDate,
   selectedClinic,
   selectedService,
   selectedTime,
   startAt,
+  submissionError,
   onBack,
+  onConfirm,
   onEditStep,
 }: BookingReviewProps) {
   const isComplete = Boolean(
@@ -150,14 +156,23 @@ export function BookingReview({
             Back
           </Button>
         </div>
-        <Button disabled={!isComplete} type="button">
-          Confirm Booking
+        <Button
+          disabled={!isComplete || isSubmitting}
+          onClick={onConfirm}
+          type="button"
+        >
+          {isSubmitting ? "Confirming..." : "Confirm Booking"}
         </Button>
         <p className="text-sm text-muted-foreground lg:col-span-2">
           {isComplete
-            ? "Ready for the booking submission step."
+            ? "Confirm to create the guest patient profile and appointment."
             : "Complete the missing details before confirming."}
         </p>
+        {submissionError ? (
+          <p className="text-sm font-medium text-destructive lg:col-span-2">
+            {submissionError}
+          </p>
+        ) : null}
       </div>
     </div>
   );
