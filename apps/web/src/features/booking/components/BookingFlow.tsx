@@ -189,17 +189,6 @@ export function BookingFlow() {
     setIsClinicDialogOpen(true);
   }
 
-  function handleCancelBooking() {
-    setSelectedClinic(null);
-    setSelectedService(null);
-    setSelectedDate("");
-    setSelectedTime("");
-    setPatientDetailsDraft(emptyPatientDetails);
-    setPatientDetails(null);
-    setActiveStep(0);
-    setIsClinicDialogOpen(true);
-  }
-
   function goToPreviousStep() {
     setActiveStep((step) => Math.max(step - 1, 0));
   }
@@ -370,7 +359,7 @@ export function BookingFlow() {
             <CardContent>
               {activeStep === 0 ? (
                 <div className="grid gap-6">
-                  <section id="booking-service">
+                  <section id="booking-service" className="py-5">
                     <h2 className="text-lg font-semibold text-primary">
                       Select Appointment
                     </h2>
@@ -406,7 +395,7 @@ export function BookingFlow() {
               ) : null}
 
               {activeStep === 1 ? (
-                <section id="booking-patient">
+                <section id="booking-patient" className="py-5">
                   <h2 className="text-lg font-semibold text-primary">
                     Your Details
                   </h2>
@@ -424,7 +413,7 @@ export function BookingFlow() {
               ) : null}
 
               {activeStep === 2 ? (
-                <section id="booking-review">
+                <section id="booking-review" className="py-5">
                   <h2 className="text-lg font-semibold text-primary">
                     Review and Confirm Appointment
                   </h2>
@@ -433,7 +422,6 @@ export function BookingFlow() {
                   </p>
                   <BookingReview
                     onBack={goToPreviousStep}
-                    onCancel={handleCancelBooking}
                     onEditStep={setActiveStep}
                     patientDetails={patientDetails}
                     selectedDate={selectedDate}

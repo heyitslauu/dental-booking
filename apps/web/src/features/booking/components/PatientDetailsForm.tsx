@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, type InputHTMLAttributes } from "react";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
+import { cn } from "../../../lib/utils";
 import type { PatientDetails } from "../types";
 
 export type PatientDetailsErrors = Partial<Record<keyof PatientDetails, string>>;
@@ -13,6 +14,7 @@ type PatientDetailsFormProps = {
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const philippineMobilePattern = /^09\d{9}$/;
 
 export const emptyPatientDetails: PatientDetails = {
   firstName: "",
@@ -37,6 +39,9 @@ export function getPatientDetailsErrors(details: PatientDetails) {
 
   if (!details.contactNumber.trim()) {
     errors.contactNumber = "Contact number is required.";
+  } else if (!philippineMobilePattern.test(details.contactNumber.trim())) {
+    errors.contactNumber =
+      "Contact number must start with 09 and contain exactly 11 digits.";
   }
 
   if (trimmedEmail && !emailPattern.test(trimmedEmail)) {
@@ -78,6 +83,10 @@ export function PatientDetailsForm({
 
   function updateField(field: keyof PatientDetails, value: string) {
     onChangeDetails({ ...details, [field]: value });
+  }
+
+  function updateContactNumber(value: string) {
+    updateField("contactNumber", value.replace(/\D/g, "").slice(0, 11));
   }
 
   function touchField(field: keyof PatientDetails) {
@@ -122,10 +131,14 @@ export function PatientDetailsForm({
             touchedFields.contactNumber ? errors.contactNumber : undefined
           }
           label="Contact number"
+          maxLength={11}
           name="contactNumber"
           onBlur={() => touchField("contactNumber")}
-          onChange={(value) => updateField("contactNumber", value)}
+          onChange={updateContactNumber}
+          placeholder="09123456789"
+          inputClassName="placeholder:text-foreground/35"
           required
+          inputMode="numeric"
           type="tel"
           value={details.contactNumber}
         />
@@ -151,7 +164,9 @@ export function PatientDetailsForm({
       />
 
       <Label className="grid gap-2">
-        Notes
+        <span>
+          Notes <OptionalText />
+        </span>
         <Textarea
           name="notes"
           onChange={(event) => updateField("notes", event.target.value)}
@@ -173,6 +188,10 @@ type FieldProps = {
   label: string;
   name: string;
   required?: boolean;
+  inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"];
+  inputClassName?: string;
+  maxLength?: number;
+  placeholder?: string;
   type?: string;
   value: string;
   onBlur?: () => void;
@@ -182,7 +201,11 @@ type FieldProps = {
 function Field({
   error,
   label,
+  inputMode,
+  inputClassName,
+  maxLength,
   name,
+  placeholder,
   required = false,
   type = "text",
   value,
@@ -197,19 +220,25 @@ function Field({
         {label}
         {required ? (
           <span className="font-bold text-destructive"> * Required</span>
-        ) : null}
+        ) : (
+          <OptionalText />
+        )}
       </span>
       <Input
         aria-describedby={error ? errorId : undefined}
         aria-invalid={Boolean(error)}
-        className={
+        className={cn(
+          inputClassName,
           error
             ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-            : undefined
-        }
+            : undefined,
+        )}
         name={name}
+        inputMode={inputMode}
+        maxLength={maxLength}
         onBlur={onBlur}
         onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
         required={required}
         type={type}
         value={value}
@@ -220,5 +249,11 @@ function Field({
         </p>
       ) : null}
     </Label>
+  );
+}
+
+function OptionalText() {
+  return (
+    <span className="font-normal text-muted-foreground/60"> (Optional)</span>
   );
 }

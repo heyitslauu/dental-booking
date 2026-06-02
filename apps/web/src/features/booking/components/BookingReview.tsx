@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Button } from "../../../components/ui/button";
+import { Card, CardContent } from "../../../components/ui/card";
 import { Separator } from "../../../components/ui/separator";
 import type { Clinic, ClinicService, PatientDetails } from "../types";
 
@@ -11,29 +12,8 @@ type BookingReviewProps = {
   selectedTime: string;
   startAt: string | null;
   onBack: () => void;
-  onCancel: () => void;
   onEditStep?: (step: number) => void;
 };
-
-function formatPrice(priceCents: number) {
-  return new Intl.NumberFormat("en-PH", {
-    currency: "PHP",
-    style: "currency"
-  }).format(priceCents / 100);
-}
-
-function formatDateTime(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Not selected";
-  }
-
-  return new Intl.DateTimeFormat("en-PH", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  }).format(date);
-}
 
 function formatDate(value: string) {
   if (!value) {
@@ -47,7 +27,7 @@ function formatDate(value: string) {
   }
 
   return new Intl.DateTimeFormat("en-PH", {
-    dateStyle: "medium"
+    dateStyle: "medium",
   }).format(date);
 }
 
@@ -64,7 +44,7 @@ function formatTime(value: string) {
 
   return new Intl.DateTimeFormat("en-PH", {
     hour: "numeric",
-    minute: "2-digit"
+    minute: "2-digit",
   }).format(date);
 }
 
@@ -76,100 +56,91 @@ export function BookingReview({
   selectedTime,
   startAt,
   onBack,
-  onCancel,
-  onEditStep
+  onEditStep,
 }: BookingReviewProps) {
   const isComplete = Boolean(
-    selectedClinic && selectedService && startAt && patientDetails
+    selectedClinic && selectedService && startAt && patientDetails,
   );
 
   return (
     <div className="mt-5 grid gap-4">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ReviewCard title="Clinic">
-          {selectedClinic ? (
-            <>
-              <SummaryRow label="Branch" value={selectedClinic.name} />
-              <SummaryRow
-                label="Address"
-                value={selectedClinic.address ?? "Address to be confirmed"}
-              />
-              <SummaryRow
-                label="Phone"
-                value={selectedClinic.phone ?? "Not provided"}
-              />
-            </>
-          ) : (
-            <MissingText>Select a clinic branch.</MissingText>
-          )}
-        </ReviewCard>
+      <Card>
+        <CardContent className="grid gap-5  bg-background py-5">
+          <ReviewSection title="Clinic">
+            {selectedClinic ? (
+              <>
+                <SummaryRow label="Branch" value={selectedClinic.name} />
+                <SummaryRow
+                  label="Address"
+                  value={selectedClinic.address ?? "Address to be confirmed"}
+                />
+                <SummaryRow
+                  label="Phone"
+                  value={selectedClinic.phone ?? "Not provided"}
+                />
+              </>
+            ) : (
+              <MissingText>Select a clinic branch.</MissingText>
+            )}
+          </ReviewSection>
 
-        <ReviewCard onEdit={() => onEditStep?.(0)} title="Service">
-          {selectedService ? (
-            <>
-              <SummaryRow
+          <Separator />
+
+          <ReviewSection onEdit={() => onEditStep?.(0)} title="Appointment">
+            {selectedService || startAt ? (
+              <>
+                <SummaryRow
                 label="Service"
-                value={selectedService.service.name}
+                value={selectedService?.service.name ?? "Not selected"}
               />
               <SummaryRow
-                label="Duration"
+                label="Scheduled on"
                 value={
-                  Number.isFinite(selectedService.service.durationMinutes)
-                    ? `${selectedService.service.durationMinutes} minutes`
-                    : "Not provided"
+                  selectedDate && selectedTime
+                    ? `${formatDate(selectedDate)} at ${formatTime(selectedTime)}`
+                    : "Not selected"
                 }
               />
-              <SummaryRow
-                label="Price"
-                value={formatPrice(selectedService.service.priceCents)}
-              />
-            </>
-          ) : (
-            <MissingText>Select a service.</MissingText>
-          )}
-        </ReviewCard>
+              </>
+            ) : (
+              <MissingText>
+                Select an appointment service, date, and time.
+              </MissingText>
+            )}
+          </ReviewSection>
 
-        <ReviewCard onEdit={() => onEditStep?.(0)} title="Appointment">
-          {startAt ? (
-            <>
-              <SummaryRow label="Date" value={formatDate(selectedDate)} />
-              <SummaryRow label="Time" value={formatTime(selectedTime)} />
-              <SummaryRow label="Starts" value={formatDateTime(startAt)} />
-            </>
-          ) : (
-            <MissingText>Select an appointment date and time.</MissingText>
-          )}
-        </ReviewCard>
+          <Separator />
 
-        <ReviewCard onEdit={() => onEditStep?.(1)} title="Patient">
-          {patientDetails ? (
-            <>
-              <SummaryRow
-                label="Name"
-                value={`${patientDetails.firstName} ${patientDetails.lastName}`}
-              />
-              <SummaryRow
-                label="Contact"
-                value={patientDetails.contactNumber}
-              />
-              <SummaryRow
-                label="Email"
-                value={patientDetails.email || "Not provided"}
-              />
-              <SummaryRow
-                label="Birth date"
-                value={patientDetails.birthDate || "Not provided"}
-              />
-              <SummaryRow
-                label="Notes"
-                value={patientDetails.notes || "None"}
-              />
-            </>
-          ) : (
-            <MissingText>Save valid patient details.</MissingText>
-          )}
-        </ReviewCard>
-      </div>
+          <ReviewSection onEdit={() => onEditStep?.(1)} title="Patient">
+            {patientDetails ? (
+              <>
+                <SummaryRow
+                  label="Name"
+                  value={`${patientDetails.firstName} ${patientDetails.lastName}`}
+                />
+                <SummaryRow
+                  label="Contact"
+                  value={patientDetails.contactNumber}
+                />
+                <SummaryRow
+                  label="Email"
+                  value={patientDetails.email || "Not provided"}
+                />
+                <SummaryRow
+                  label="Birth date"
+                  value={patientDetails.birthDate || "Not provided"}
+                />
+                <SummaryRow
+                  label="Notes"
+                  value={patientDetails.notes || "None"}
+                />
+              </>
+            ) : (
+              <MissingText>Save valid patient details.</MissingText>
+            )}
+          </ReviewSection>
+        </CardContent>
+      </Card>
 
       <Separator />
 
@@ -177,9 +148,6 @@ export function BookingReview({
         <div className="flex flex-wrap items-center gap-3">
           <Button onClick={onBack} type="button" variant="outline">
             Back
-          </Button>
-          <Button onClick={onCancel} type="button" variant="outline">
-            Cancel
           </Button>
         </div>
         <Button disabled={!isComplete} type="button">
@@ -195,15 +163,15 @@ export function BookingReview({
   );
 }
 
-type ReviewCardProps = {
+type ReviewSectionProps = {
   children: ReactNode;
   onEdit?: () => void;
   title: string;
 };
 
-function ReviewCard({ children, onEdit, title }: ReviewCardProps) {
+function ReviewSection({ children, onEdit, title }: ReviewSectionProps) {
   return (
-    <div className="rounded-md border border-border bg-background p-4">
+    <section>
       <div className="flex items-start justify-between gap-4">
         <h3 className="text-sm font-semibold text-primary">{title}</h3>
         {onEdit ? (
@@ -216,8 +184,8 @@ function ReviewCard({ children, onEdit, title }: ReviewCardProps) {
           </button>
         ) : null}
       </div>
-      <div className="mt-4 grid gap-3">{children}</div>
-    </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">{children}</div>
+    </section>
   );
 }
 
