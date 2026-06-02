@@ -132,10 +132,6 @@ export function BookingReview({
         <ReviewCard onEdit={() => onEditStep?.(0)} title="Appointment">
           {startAt ? (
             <>
-              <SummaryRow
-                label="Service"
-                value={selectedService?.service.name ?? "Not selected"}
-              />
               <SummaryRow label="Date" value={formatDate(selectedDate)} />
               <SummaryRow label="Time" value={formatTime(selectedTime)} />
               <SummaryRow label="Starts" value={formatDateTime(startAt)} />
@@ -177,7 +173,7 @@ export function BookingReview({
 
       <Separator />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-zinc-50 p-4">
+      <div className="grid gap-3 rounded-md bg-zinc-50 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
         <div className="flex flex-wrap items-center gap-3">
           <Button onClick={onBack} type="button" variant="outline">
             Back
@@ -186,13 +182,10 @@ export function BookingReview({
             Cancel
           </Button>
         </div>
-        <Button
-          disabled={!isComplete}
-          type="button"
-        >
+        <Button disabled={!isComplete} type="button">
           Confirm Booking
         </Button>
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-zinc-600 lg:col-span-2">
           {isComplete
             ? "Ready for the booking submission step."
             : "Complete the missing details before confirming."}

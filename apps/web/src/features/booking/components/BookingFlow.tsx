@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui
 import { getClinicServices, getClinics } from "../../clinics/api";
 import type { Clinic, ClinicService, PatientDetails } from "../types";
 import { BookingReview } from "./BookingReview";
+import { ClinicChangeWarningDialog } from "./ClinicChangeWarningDialog";
 import { ClinicSelectionDialog } from "./ClinicSelectionDialog";
 import { DateTimeSelection } from "./DateTimeSelection";
 import {
@@ -49,6 +50,8 @@ export function BookingFlow() {
   const [isLoadingClinics, setIsLoadingClinics] = useState(true);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [isClinicDialogOpen, setIsClinicDialogOpen] = useState(true);
+  const [isClinicChangeWarningOpen, setIsClinicChangeWarningOpen] =
+    useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [selectedService, setSelectedService] = useState<ClinicService | null>(
     null
@@ -159,6 +162,26 @@ export function BookingFlow() {
     setActiveStep(0);
   }
 
+  function handleRequestClinicChange() {
+    setIsClinicChangeWarningOpen(true);
+  }
+
+  function handleCancelClinicChange() {
+    setIsClinicChangeWarningOpen(false);
+  }
+
+  function handleConfirmClinicChange() {
+    setSelectedClinic(null);
+    setSelectedService(null);
+    setSelectedDate("");
+    setSelectedTime("");
+    setPatientDetailsDraft(emptyPatientDetails);
+    setPatientDetails(null);
+    setActiveStep(0);
+    setIsClinicChangeWarningOpen(false);
+    setIsClinicDialogOpen(true);
+  }
+
   function handleCancelBooking() {
     setSelectedClinic(null);
     setSelectedService(null);
@@ -244,6 +267,12 @@ export function BookingFlow() {
         selectedClinic={selectedClinic}
       />
 
+      <ClinicChangeWarningDialog
+        onCancel={handleCancelClinicChange}
+        onContinue={handleConfirmClinicChange}
+        open={isClinicChangeWarningOpen}
+      />
+
       {!selectedClinic ? null : (
         <section className="grid gap-4">
           <Card>
@@ -255,11 +284,11 @@ export function BookingFlow() {
                 </p>
               </div>
               <Button
-                onClick={() => setIsClinicDialogOpen(true)}
+                onClick={handleRequestClinicChange}
                 type="button"
                 variant="outline"
               >
-                Change
+                Change Clinic
               </Button>
             </CardHeader>
             <CardContent className="grid gap-2 text-sm text-zinc-600 sm:grid-cols-2">
