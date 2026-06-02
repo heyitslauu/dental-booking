@@ -1,14 +1,15 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
+import { Textarea } from "../../../components/ui/textarea";
 import type { PatientDetails } from "../types";
 
-type PatientDetailsErrors = Partial<Record<keyof PatientDetails, string>>;
+export type PatientDetailsErrors = Partial<Record<keyof PatientDetails, string>>;
 
 type PatientDetailsFormProps = {
   canEnterDetails: boolean;
   details: PatientDetails;
-  savedDetails: PatientDetails | null;
   onChangeDetails: (details: PatientDetails) => void;
-  onSaveDetails: (details: PatientDetails) => void;
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,7 +23,7 @@ export const emptyPatientDetails: PatientDetails = {
   notes: ""
 };
 
-function validatePatientDetails(details: PatientDetails) {
+export function getPatientDetailsErrors(details: PatientDetails) {
   const errors: PatientDetailsErrors = {};
   const trimmedEmail = details.email.trim();
 
@@ -45,7 +46,9 @@ function validatePatientDetails(details: PatientDetails) {
   return errors;
 }
 
-function normalizePatientDetails(details: PatientDetails): PatientDetails {
+export function normalizePatientDetails(
+  details: PatientDetails
+): PatientDetails {
   return {
     firstName: details.firstName.trim(),
     lastName: details.lastName.trim(),
@@ -56,34 +59,29 @@ function normalizePatientDetails(details: PatientDetails): PatientDetails {
   };
 }
 
+export function isPatientDetailsValid(details: PatientDetails) {
+  return Object.keys(getPatientDetailsErrors(normalizePatientDetails(details)))
+    .length === 0;
+}
+
 export function PatientDetailsForm({
   canEnterDetails,
   details,
-  savedDetails,
-  onChangeDetails,
-  onSaveDetails
+  onChangeDetails
 }: PatientDetailsFormProps) {
-  const [errors, setErrors] = useState<PatientDetailsErrors>({});
+  const [touchedFields, setTouchedFields] = useState<
+    Partial<Record<keyof PatientDetails, boolean>>
+  >({});
+  const normalizedDetails = normalizePatientDetails(details);
+  const errors = getPatientDetailsErrors(normalizedDetails);
+  const isValid = Object.keys(errors).length === 0;
 
   function updateField(field: keyof PatientDetails, value: string) {
     onChangeDetails({ ...details, [field]: value });
-    setErrors((currentErrors) => ({ ...currentErrors, [field]: undefined }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const nextDetails = normalizePatientDetails(details);
-    const nextErrors = validatePatientDetails(nextDetails);
-
-    setErrors(nextErrors);
-
-    if (Object.keys(nextErrors).length > 0) {
-      return;
-    }
-
-    onChangeDetails(nextDetails);
-    onSaveDetails(nextDetails);
+  function touchField(field: keyof PatientDetails) {
+    setTouchedFields((currentFields) => ({ ...currentFields, [field]: true }));
   }
 
   if (!canEnterDetails) {
@@ -96,20 +94,22 @@ export function PatientDetailsForm({
   }
 
   return (
-    <form className="mt-5 grid gap-4" noValidate onSubmit={handleSubmit}>
+    <div className="mt-5 grid gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          error={errors.firstName}
+          error={touchedFields.firstName ? errors.firstName : undefined}
           label="First name"
           name="firstName"
+          onBlur={() => touchField("firstName")}
           onChange={(value) => updateField("firstName", value)}
           required
           value={details.firstName}
         />
         <Field
-          error={errors.lastName}
+          error={touchedFields.lastName ? errors.lastName : undefined}
           label="Last name"
           name="lastName"
+          onBlur={() => touchField("lastName")}
           onChange={(value) => updateField("lastName", value)}
           required
           value={details.lastName}
@@ -118,18 +118,22 @@ export function PatientDetailsForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          error={errors.contactNumber}
+          error={
+            touchedFields.contactNumber ? errors.contactNumber : undefined
+          }
           label="Contact number"
           name="contactNumber"
+          onBlur={() => touchField("contactNumber")}
           onChange={(value) => updateField("contactNumber", value)}
           required
           type="tel"
           value={details.contactNumber}
         />
         <Field
-          error={errors.email}
+          error={touchedFields.email ? errors.email : undefined}
           label="Email"
           name="email"
+          onBlur={() => touchField("email")}
           onChange={(value) => updateField("email", value)}
           type="email"
           value={details.email}
@@ -140,35 +144,27 @@ export function PatientDetailsForm({
         error={errors.birthDate}
         label="Birth date"
         name="birthDate"
+        onBlur={() => touchField("birthDate")}
         onChange={(value) => updateField("birthDate", value)}
         type="date"
         value={details.birthDate}
       />
 
-      <label className="grid gap-2 text-sm font-medium text-zinc-800">
+      <Label className="grid gap-2">
         Notes
-        <textarea
-          className="min-h-24 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
+        <Textarea
           name="notes"
           onChange={(event) => updateField("notes", event.target.value)}
           value={details.notes}
         />
-      </label>
+      </Label>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-800"
-          type="submit"
-        >
-          Save patient details
-        </button>
-        {savedDetails ? (
-          <p className="text-sm font-medium text-teal-800">
-            Patient details saved.
-          </p>
-        ) : null}
-      </div>
-    </form>
+      <p className={`text-sm ${isValid ? "text-teal-800" : "text-zinc-500"}`}>
+        {isValid
+          ? "Patient details are ready."
+          : "Complete the required patient details to continue."}
+      </p>
+    </div>
   );
 }
 
@@ -179,6 +175,7 @@ type FieldProps = {
   required?: boolean;
   type?: string;
   value: string;
+  onBlur?: () => void;
   onChange: (value: string) => void;
 };
 
@@ -189,22 +186,24 @@ function Field({
   required = false,
   type = "text",
   value,
+  onBlur,
   onChange
 }: FieldProps) {
   const errorId = `${name}-error`;
 
   return (
-    <label className="grid gap-2 text-sm font-medium text-zinc-800">
+    <Label className="grid gap-2">
       {label}
-      <input
+      <Input
         aria-describedby={error ? errorId : undefined}
         aria-invalid={Boolean(error)}
-        className={`h-10 rounded-md border bg-white px-3 text-sm text-zinc-950 outline-none transition focus:ring-2 ${
+        className={
           error
             ? "border-red-400 focus:border-red-600 focus:ring-red-600/20"
-            : "border-zinc-300 focus:border-teal-700 focus:ring-teal-700/20"
-        }`}
+            : undefined
+        }
         name={name}
+        onBlur={onBlur}
         onChange={(event) => onChange(event.target.value)}
         required={required}
         type={type}
@@ -215,6 +214,6 @@ function Field({
           {error}
         </p>
       ) : null}
-    </label>
+    </Label>
   );
 }

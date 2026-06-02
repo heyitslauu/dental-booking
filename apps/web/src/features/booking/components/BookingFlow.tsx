@@ -8,6 +8,8 @@ import { ClinicSelectionDialog } from "./ClinicSelectionDialog";
 import { DateTimeSelection } from "./DateTimeSelection";
 import {
   emptyPatientDetails,
+  isPatientDetailsValid,
+  normalizePatientDetails,
   PatientDetailsForm
 } from "./PatientDetailsForm";
 import { ServiceSelection } from "./ServiceSelection";
@@ -71,6 +73,7 @@ export function BookingFlow() {
   const isSelectAppointmentComplete = Boolean(
     selectedService && selectedDate && selectedTime && startAt
   );
+  const isYourDetailsComplete = isPatientDetailsValid(patientDetailsDraft);
 
   useEffect(() => {
     let isCurrent = true;
@@ -137,7 +140,9 @@ export function BookingFlow() {
 
   function handleChangePatientDetails(details: PatientDetails) {
     setPatientDetailsDraft(details);
-    setPatientDetails(null);
+    setPatientDetails(
+      isPatientDetailsValid(details) ? normalizePatientDetails(details) : null
+    );
   }
 
   function handleClinicDialogOpenChange(open: boolean) {
@@ -154,12 +159,27 @@ export function BookingFlow() {
     setActiveStep(0);
   }
 
+  function handleCancelBooking() {
+    setSelectedClinic(null);
+    setSelectedService(null);
+    setSelectedDate("");
+    setSelectedTime("");
+    setPatientDetailsDraft(emptyPatientDetails);
+    setPatientDetails(null);
+    setActiveStep(0);
+    setIsClinicDialogOpen(true);
+  }
+
   function goToPreviousStep() {
     setActiveStep((step) => Math.max(step - 1, 0));
   }
 
   function goToNextStep() {
     if (activeStep === 0 && !isSelectAppointmentComplete) {
+      return;
+    }
+
+    if (activeStep === 1 && !isYourDetailsComplete) {
       return;
     }
 
@@ -334,8 +354,6 @@ export function BookingFlow() {
                     )}
                     details={patientDetailsDraft}
                     onChangeDetails={handleChangePatientDetails}
-                    onSaveDetails={setPatientDetails}
-                    savedDetails={patientDetails}
                   />
                 </section>
               ) : null}
@@ -349,35 +367,42 @@ export function BookingFlow() {
                     Review the appointment details before confirming.
                   </p>
                   <BookingReview
+                    onBack={goToPreviousStep}
+                    onCancel={handleCancelBooking}
                     onEditStep={setActiveStep}
                     patientDetails={patientDetails}
+                    selectedDate={selectedDate}
                     selectedClinic={selectedClinic}
                     selectedService={selectedService}
+                    selectedTime={selectedTime}
                     startAt={startAt}
                   />
                 </section>
               ) : null}
 
-              <div className="mt-6 flex items-center justify-between border-t border-zinc-200 pt-4">
-                <Button
-                  disabled={activeStep === 0}
-                  onClick={goToPreviousStep}
-                  type="button"
-                  variant="outline"
-                >
-                  Back
-                </Button>
-                <Button
-                  disabled={
-                    activeStep === bookingSteps.length - 1 ||
-                    (activeStep === 0 && !isSelectAppointmentComplete)
-                  }
-                  onClick={goToNextStep}
-                  type="button"
-                >
-                  Next
-                </Button>
-              </div>
+              {activeStep < bookingSteps.length - 1 ? (
+                <div className="mt-6 flex items-center justify-between border-t border-zinc-200 pt-4">
+                  <Button
+                    disabled={activeStep === 0}
+                    onClick={goToPreviousStep}
+                    type="button"
+                    variant="outline"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    disabled={
+                      activeStep === bookingSteps.length - 1 ||
+                      (activeStep === 0 && !isSelectAppointmentComplete) ||
+                      (activeStep === 1 && !isYourDetailsComplete)
+                    }
+                    onClick={goToNextStep}
+                    type="button"
+                  >
+                    Next
+                  </Button>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </section>

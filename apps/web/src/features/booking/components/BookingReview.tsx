@@ -1,11 +1,17 @@
 import type { ReactNode } from "react";
+import { Button } from "../../../components/ui/button";
+import { Separator } from "../../../components/ui/separator";
 import type { Clinic, ClinicService, PatientDetails } from "../types";
 
 type BookingReviewProps = {
   patientDetails: PatientDetails | null;
+  selectedDate: string;
   selectedClinic: Clinic | null;
   selectedService: ClinicService | null;
+  selectedTime: string;
   startAt: string | null;
+  onBack: () => void;
+  onCancel: () => void;
   onEditStep?: (step: number) => void;
 };
 
@@ -29,11 +35,48 @@ function formatDateTime(value: string) {
   }).format(date);
 }
 
+function formatDate(value: string) {
+  if (!value) {
+    return "Not selected";
+  }
+
+  const date = new Date(`${value}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Not selected";
+  }
+
+  return new Intl.DateTimeFormat("en-PH", {
+    dateStyle: "medium"
+  }).format(date);
+}
+
+function formatTime(value: string) {
+  if (!value) {
+    return "Not selected";
+  }
+
+  const date = new Date(`2000-01-01T${value}:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Not selected";
+  }
+
+  return new Intl.DateTimeFormat("en-PH", {
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(date);
+}
+
 export function BookingReview({
   patientDetails,
+  selectedDate,
   selectedClinic,
   selectedService,
+  selectedTime,
   startAt,
+  onBack,
+  onCancel,
   onEditStep
 }: BookingReviewProps) {
   const isComplete = Boolean(
@@ -88,7 +131,15 @@ export function BookingReview({
 
         <ReviewCard onEdit={() => onEditStep?.(0)} title="Appointment">
           {startAt ? (
-            <SummaryRow label="Starts" value={formatDateTime(startAt)} />
+            <>
+              <SummaryRow
+                label="Service"
+                value={selectedService?.service.name ?? "Not selected"}
+              />
+              <SummaryRow label="Date" value={formatDate(selectedDate)} />
+              <SummaryRow label="Time" value={formatTime(selectedTime)} />
+              <SummaryRow label="Starts" value={formatDateTime(startAt)} />
+            </>
           ) : (
             <MissingText>Select an appointment date and time.</MissingText>
           )}
@@ -124,14 +175,23 @@ export function BookingReview({
         </ReviewCard>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-md bg-zinc-50 p-4">
-        <button
-          className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500"
+      <Separator />
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-zinc-50 p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button onClick={onBack} type="button" variant="outline">
+            Back
+          </Button>
+          <Button onClick={onCancel} type="button" variant="outline">
+            Cancel
+          </Button>
+        </div>
+        <Button
           disabled={!isComplete}
           type="button"
         >
           Confirm Booking
-        </button>
+        </Button>
         <p className="text-sm text-zinc-600">
           {isComplete
             ? "Ready for the booking submission step."
