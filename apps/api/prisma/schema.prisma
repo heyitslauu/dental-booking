@@ -135,6 +135,7 @@ model PatientProfile {
 
 model Appointment {
   id               String            @id @default(cuid())
+  referenceNumber  String            @unique
   clinicId         String
   serviceId        String
   patientProfileId String
