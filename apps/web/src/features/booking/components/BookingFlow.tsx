@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -36,30 +36,38 @@ function getTodayDateValue() {
   return `${year}-${month}-${day}`;
 }
 
-function getStartAt(date: string, time: string) {
+function getAppointmentTimes(date: string, time: string) {
   if (!date || !time) {
-    return null;
+    return { endAt: null, startAt: null };
   }
 
-  const startAt = new Date(`${date}T${time}:00`);
+  const [year, month, day] = date.split("-").map(Number);
+  const [hours, minutes] = time.split(":").map(Number);
+
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(day) ||
+    !Number.isInteger(hours) ||
+    !Number.isInteger(minutes)
+  ) {
+    return { endAt: null, startAt: null };
+  }
+
+  const startAt = new Date(year, month - 1, day, hours, minutes, 0, 0);
 
   if (Number.isNaN(startAt.getTime())) {
-    return null;
+    return { endAt: null, startAt: null };
   }
 
-  return startAt.toISOString();
-}
-
-function getEndAt(startAt: string) {
   const endAt = new Date(startAt);
-
-  if (Number.isNaN(endAt.getTime())) {
-    return null;
-  }
 
   endAt.setHours(endAt.getHours() + 1);
 
-  return endAt.toISOString();
+  return {
+    endAt: endAt.toISOString(),
+    startAt: startAt.toISOString(),
+  };
 }
 
 function getSubmissionErrorMessage(error: unknown) {
@@ -71,6 +79,7 @@ function getSubmissionErrorMessage(error: unknown) {
 }
 
 export function BookingFlow() {
+  const isSubmittingBookingRef = useRef(false);
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [clinicsError, setClinicsError] = useState<string | null>(null);
   const [isLoadingClinics, setIsLoadingClinics] = useState(true);
@@ -99,10 +108,11 @@ export function BookingFlow() {
   const [clinicsReloadKey, setClinicsReloadKey] = useState(0);
   const [servicesReloadKey, setServicesReloadKey] = useState(0);
   const minDate = useMemo(() => getTodayDateValue(), []);
-  const startAt = useMemo(
-    () => getStartAt(selectedDate, selectedTime),
+  const appointmentTimes = useMemo(
+    () => getAppointmentTimes(selectedDate, selectedTime),
     [selectedDate, selectedTime],
   );
+  const startAt = appointmentTimes.startAt;
   const isSelectAppointmentComplete = Boolean(
     selectedService && selectedDate && selectedTime && startAt,
   );
@@ -170,7 +180,18 @@ export function BookingFlow() {
       return;
     }
 
+    setSubmissionError(null);
     setSelectedDate(date);
+  }
+
+  function handleSelectService(service: ClinicService | null) {
+    setSubmissionError(null);
+    setSelectedService(service);
+  }
+
+  function handleSelectTime(time: string) {
+    setSubmissionError(null);
+    setSelectedTime(time);
   }
 
   function handleChangePatientDetails(details: PatientDetails) {
@@ -214,6 +235,7 @@ export function BookingFlow() {
     setPatientDetails(null);
     setCreatedAppointment(null);
     setSubmissionError(null);
+    isSubmittingBookingRef.current = false;
     setIsSubmittingBooking(false);
     setActiveStep(0);
     setIsClinicChangeWarningOpen(false);
@@ -222,6 +244,7 @@ export function BookingFlow() {
 
   async function handleConfirmBooking() {
     if (
+      isSubmittingBookingRef.current ||
       isSubmittingBooking ||
       !selectedClinic ||
       !selectedService ||
@@ -231,13 +254,14 @@ export function BookingFlow() {
       return;
     }
 
-    const endAt = getEndAt(startAt);
+    const { endAt } = getAppointmentTimes(selectedDate, selectedTime);
 
     if (!endAt) {
       setSubmissionError("Select a valid appointment date and time.");
       return;
     }
 
+    isSubmittingBookingRef.current = true;
     setIsSubmittingBooking(true);
     setSubmissionError(null);
 
@@ -265,6 +289,7 @@ export function BookingFlow() {
     } catch (error) {
       setSubmissionError(getSubmissionErrorMessage(error));
     } finally {
+      isSubmittingBookingRef.current = false;
       setIsSubmittingBooking(false);
     }
   }
@@ -478,7 +503,7 @@ export function BookingFlow() {
                           error={servicesError}
                           isLoading={isLoadingServices}
                           onRetry={() => setServicesReloadKey((key) => key + 1)}
-                          onSelectService={setSelectedService}
+                          onSelectService={handleSelectService}
                           selectedClinic={selectedClinic}
                           selectedService={selectedService}
                           services={services}
@@ -490,7 +515,7 @@ export function BookingFlow() {
                           <DateTimeSelection
                             minDate={minDate}
                             onSelectDate={handleSelectDate}
-                            onSelectTime={setSelectedTime}
+                            onSelectTime={handleSelectTime}
                             selectedClinic={selectedClinic}
                             selectedDate={selectedDate}
                             selectedService={selectedService}

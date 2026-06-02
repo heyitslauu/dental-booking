@@ -68,6 +68,12 @@ export class AppointmentsService {
     const startAt = new Date(dto.startAt);
     const endAt = new Date(dto.endAt);
 
+    if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) {
+      throw new BadRequestException(
+        "Appointment startAt and endAt must be valid dates."
+      );
+    }
+
     if (endAt <= startAt) {
       throw new BadRequestException("Appointment endAt must be after startAt.");
     }
