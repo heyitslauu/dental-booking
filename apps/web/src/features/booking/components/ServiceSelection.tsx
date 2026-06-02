@@ -29,7 +29,7 @@ export function ServiceSelection({
 }: ServiceSelectionProps) {
   if (!selectedClinic) {
     return (
-      <div className="mt-5 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-600">
+      <div className="mt-5 rounded-md border border-dashed border-border bg-surface p-4 text-sm text-muted-foreground">
         Select a branch first to see its available services.
       </div>
     );
@@ -40,7 +40,7 @@ export function ServiceSelection({
       <div className="mt-5 space-y-3">
         {[1, 2, 3].map((item) => (
           <div
-            className="h-24 animate-pulse rounded-md border border-zinc-200 bg-zinc-100"
+            className="h-24 animate-pulse rounded-md border border-border bg-surface"
             key={item}
           />
         ))}
@@ -50,13 +50,13 @@ export function ServiceSelection({
 
   if (error) {
     return (
-      <div className="mt-5 rounded-md border border-red-200 bg-red-50 p-4">
-        <p className="text-sm font-medium text-red-900">
+      <div className="mt-5 rounded-md border border-destructive/30 bg-destructive/10 p-4">
+        <p className="text-sm font-medium text-destructive">
           Services could not be loaded.
         </p>
-        <p className="mt-1 text-sm text-red-700">{error}</p>
+        <p className="mt-1 text-sm text-destructive">{error}</p>
         <button
-          className="mt-4 rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800"
+          className="mt-4 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90"
           onClick={onRetry}
           type="button"
         >
@@ -68,7 +68,7 @@ export function ServiceSelection({
 
   if (services.length === 0) {
     return (
-      <div className="mt-5 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-600">
+      <div className="mt-5 rounded-md border border-dashed border-border bg-surface p-4 text-sm text-muted-foreground">
         No services are available for {selectedClinic.name} yet.
       </div>
     );
@@ -81,7 +81,7 @@ export function ServiceSelection({
       <Label className="grid gap-2" htmlFor="booking-service-select">
         Service
         <select
-          className="h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm font-normal text-zinc-950 outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
+          className="h-10 rounded-md border border-border bg-background px-3 text-sm font-normal text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
           id="booking-service-select"
           onChange={(event) => {
             const nextService =
@@ -102,16 +102,16 @@ export function ServiceSelection({
       </Label>
 
       {selectedServiceDetails ? (
-        <div className="rounded-md border border-zinc-200 bg-zinc-50 p-4">
-          <p className="text-sm font-medium text-zinc-950">
+        <div className="rounded-md border border-accent/40 bg-accent/10 p-4">
+          <p className="text-sm font-medium text-primary">
             {selectedServiceDetails.name}
           </p>
           {selectedServiceDetails.description ? (
-            <p className="mt-1 text-sm text-zinc-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               {selectedServiceDetails.description}
             </p>
           ) : null}
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-muted-foreground">
             {selectedServiceDetails.durationMinutes} min
             {Number.isFinite(selectedServiceDetails.priceCents)
               ? ` · ${formatPrice(selectedServiceDetails.priceCents)}`

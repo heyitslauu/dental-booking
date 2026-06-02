@@ -42,7 +42,7 @@ export function AlertDialogContent({
   return (
     <div
       aria-modal="true"
-      className="fixed inset-0 z-50 flex min-h-screen items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex min-h-screen items-center justify-center bg-foreground/50 p-4"
       role="dialog"
     >
       <div

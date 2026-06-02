@@ -43,7 +43,7 @@ export function DateTimeSelection({
 
   if (!canChooseSchedule) {
     return (
-      <div className="mt-5 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-600">
+      <div className="mt-5 rounded-md border border-dashed border-border bg-surface p-4 text-sm text-muted-foreground">
         Select a branch and service before choosing an appointment date and time.
       </div>
     );
@@ -51,10 +51,10 @@ export function DateTimeSelection({
 
   return (
     <div className="mt-5 grid gap-4 sm:grid-cols-2">
-      <label className="grid gap-2 text-sm font-medium text-zinc-800">
+      <label className="grid gap-2 text-sm font-medium text-foreground">
         Appointment date
         <input
-          className="h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-950 outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
+          className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
           min={minDate}
           onChange={(event) => onSelectDate(event.target.value)}
           type="date"
@@ -62,10 +62,10 @@ export function DateTimeSelection({
         />
       </label>
 
-      <label className="grid gap-2 text-sm font-medium text-zinc-800">
+      <label className="grid gap-2 text-sm font-medium text-foreground">
         Appointment time
         <select
-          className="h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-950 outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
+          className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
           onChange={(event) => onSelectTime(event.target.value)}
           value={selectedTime}
         >
@@ -78,7 +78,7 @@ export function DateTimeSelection({
         </select>
       </label>
 
-      <div className="rounded-md bg-zinc-50 p-3 text-sm text-zinc-600 sm:col-span-2">
+      <div className="rounded-md bg-surface p-3 text-sm text-muted-foreground sm:col-span-2">
         {startAt
           ? "Date and time selected."
           : "Choose both a date and time to continue."}

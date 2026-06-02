@@ -279,7 +279,7 @@ export function BookingFlow() {
             <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
               <div>
                 <CardTitle>Selected clinic</CardTitle>
-                <p className="mt-2 text-sm font-medium text-zinc-950">
+                <p className="mt-2 text-sm font-medium text-foreground">
                   {selectedClinic.name}
                 </p>
               </div>
@@ -291,7 +291,7 @@ export function BookingFlow() {
                 Change Clinic
               </Button>
             </CardHeader>
-            <CardContent className="grid gap-2 text-sm text-zinc-600 sm:grid-cols-2">
+            <CardContent className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
               <p>{selectedClinic.address ?? "Address to be confirmed"}</p>
               <p>{selectedClinic.phone ?? "Contact number to be confirmed"}</p>
             </CardContent>
@@ -308,18 +308,18 @@ export function BookingFlow() {
                     <li
                       className={`flex items-center gap-3 rounded-md border p-3 text-sm ${
                         isCurrent
-                          ? "border-teal-700 bg-teal-50 text-teal-950"
+                          ? "border-accent bg-accent/15 text-accent-foreground"
                           : isComplete
-                            ? "border-teal-100 bg-white text-zinc-700"
-                            : "border-zinc-200 bg-white text-zinc-500"
+                            ? "border-primary/30 bg-background text-primary"
+                            : "border-border bg-background text-muted-foreground"
                       }`}
                       key={step}
                     >
                       <span
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
                           isCurrent || isComplete
-                            ? "bg-teal-700 text-white"
-                            : "bg-zinc-100 text-zinc-500"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-surface text-muted-foreground"
                         }`}
                       >
                         {index + 1}
@@ -335,10 +335,10 @@ export function BookingFlow() {
               {activeStep === 0 ? (
                 <div className="grid gap-6">
                   <section id="booking-service">
-                    <h2 className="text-lg font-semibold text-zinc-950">
+                    <h2 className="text-lg font-semibold text-primary">
                       Select Appointment
                     </h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-600">
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
                       Pick a service and choose an appointment date and time.
                     </p>
                     <ServiceSelection
@@ -371,10 +371,10 @@ export function BookingFlow() {
 
               {activeStep === 1 ? (
                 <section id="booking-patient">
-                  <h2 className="text-lg font-semibold text-zinc-950">
+                  <h2 className="text-lg font-semibold text-primary">
                     Your Details
                   </h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-600">
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
                     Enter the guest patient profile and contact details.
                   </p>
                   <PatientDetailsForm
@@ -389,10 +389,10 @@ export function BookingFlow() {
 
               {activeStep === 2 ? (
                 <section id="booking-review">
-                  <h2 className="text-lg font-semibold text-zinc-950">
+                  <h2 className="text-lg font-semibold text-primary">
                     Review and Confirm Appointment
                   </h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-600">
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
                     Review the appointment details before confirming.
                   </p>
                   <BookingReview
@@ -410,7 +410,7 @@ export function BookingFlow() {
               ) : null}
 
               {activeStep < bookingSteps.length - 1 ? (
-                <div className="mt-6 flex items-center justify-between border-t border-zinc-200 pt-4">
+                <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
                   <Button
                     disabled={activeStep === 0}
                     onClick={goToPreviousStep}

@@ -52,7 +52,7 @@ export function ClinicSelectionDialog({
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {[1, 2, 3].map((item) => (
               <div
-                className="h-36 animate-pulse rounded-lg border border-zinc-200 bg-zinc-100"
+                className="h-36 animate-pulse rounded-lg border border-border bg-surface"
                 key={item}
               />
             ))}
@@ -60,11 +60,11 @@ export function ClinicSelectionDialog({
         ) : null}
 
         {error ? (
-          <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4">
-            <p className="text-sm font-medium text-red-900">
+          <div className="mt-6 rounded-md border border-destructive/30 bg-destructive/10 p-4">
+            <p className="text-sm font-medium text-destructive">
               Clinics could not be loaded.
             </p>
-            <p className="mt-1 text-sm text-red-700">{error}</p>
+            <p className="mt-1 text-sm text-destructive">{error}</p>
             <Button className="mt-4" onClick={onRetry} type="button">
               Try again
             </Button>
@@ -72,7 +72,7 @@ export function ClinicSelectionDialog({
         ) : null}
 
         {!isLoading && !error && clinics.length === 0 ? (
-          <div className="mt-6 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-600">
+          <div className="mt-6 rounded-md border border-dashed border-border bg-surface p-4 text-sm text-muted-foreground">
             No active clinics are available yet.
           </div>
         ) : null}
@@ -85,7 +85,7 @@ export function ClinicSelectionDialog({
               return (
                 <button
                   aria-pressed={isSelected}
-                  className="rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   key={clinic.id}
                   onClick={() => onSelectClinic(clinic)}
                   type="button"
@@ -93,8 +93,8 @@ export function ClinicSelectionDialog({
                   <Card
                     className={`h-full transition ${
                       isSelected
-                        ? "border-teal-700 ring-2 ring-teal-700/20"
-                        : "hover:border-teal-400"
+                        ? "border-accent ring-2 ring-accent/30"
+                        : "hover:border-primary"
                     }`}
                   >
                     <CardHeader>
@@ -104,7 +104,7 @@ export function ClinicSelectionDialog({
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-zinc-600">
+                      <p className="text-sm text-muted-foreground">
                         {clinic.phone ?? "Contact number to be confirmed"}
                       </p>
                     </CardContent>

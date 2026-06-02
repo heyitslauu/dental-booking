@@ -86,7 +86,7 @@ export function PatientDetailsForm({
 
   if (!canEnterDetails) {
     return (
-      <div className="mt-5 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-600">
+      <div className="mt-5 rounded-md border border-dashed border-border bg-surface p-4 text-sm text-muted-foreground">
         Select a branch, service, appointment date, and appointment time before
         entering patient details.
       </div>
@@ -159,7 +159,7 @@ export function PatientDetailsForm({
         />
       </Label>
 
-      <p className={`text-sm ${isValid ? "text-teal-800" : "text-zinc-500"}`}>
+      <p className={`text-sm ${isValid ? "text-primary" : "text-muted-foreground"}`}>
         {isValid
           ? "Patient details are ready."
           : "Complete the required patient details to continue."}
@@ -199,7 +199,7 @@ function Field({
         aria-invalid={Boolean(error)}
         className={
           error
-            ? "border-red-400 focus:border-red-600 focus:ring-red-600/20"
+            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
             : undefined
         }
         name={name}
@@ -210,7 +210,7 @@ function Field({
         value={value}
       />
       {error ? (
-        <p className="text-sm font-medium text-red-700" id={errorId}>
+        <p className="text-sm font-medium text-destructive" id={errorId}>
           {error}
         </p>
       ) : null}

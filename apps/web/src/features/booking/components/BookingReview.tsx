@@ -173,7 +173,7 @@ export function BookingReview({
 
       <Separator />
 
-      <div className="grid gap-3 rounded-md bg-zinc-50 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+      <div className="grid gap-3 rounded-md bg-surface p-4 lg:grid-cols-[1fr_auto] lg:items-center">
         <div className="flex flex-wrap items-center gap-3">
           <Button onClick={onBack} type="button" variant="outline">
             Back
@@ -185,7 +185,7 @@ export function BookingReview({
         <Button disabled={!isComplete} type="button">
           Confirm Booking
         </Button>
-        <p className="text-sm text-zinc-600 lg:col-span-2">
+        <p className="text-sm text-muted-foreground lg:col-span-2">
           {isComplete
             ? "Ready for the booking submission step."
             : "Complete the missing details before confirming."}
@@ -203,12 +203,12 @@ type ReviewCardProps = {
 
 function ReviewCard({ children, onEdit, title }: ReviewCardProps) {
   return (
-    <div className="rounded-md border border-zinc-200 bg-white p-4">
+    <div className="rounded-md border border-border bg-background p-4">
       <div className="flex items-start justify-between gap-4">
-        <h3 className="text-sm font-semibold text-zinc-950">{title}</h3>
+        <h3 className="text-sm font-semibold text-primary">{title}</h3>
         {onEdit ? (
           <button
-            className="text-sm font-medium text-teal-700 hover:text-teal-800"
+            className="text-sm font-medium text-primary hover:opacity-80"
             onClick={onEdit}
             type="button"
           >
@@ -229,14 +229,14 @@ type SummaryRowProps = {
 function SummaryRow({ label, value }: SummaryRowProps) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
-      <p className="mt-1 text-sm text-zinc-900">{value}</p>
+      <p className="mt-1 text-sm text-foreground">{value}</p>
     </div>
   );
 }
 
 function MissingText({ children }: { children: ReactNode }) {
-  return <p className="text-sm text-zinc-500">{children}</p>;
+  return <p className="text-sm text-muted-foreground">{children}</p>;
 }
