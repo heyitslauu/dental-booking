@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -8,7 +9,7 @@ import {
 } from "../../../components/ui/card";
 import { getClinicServices, getClinics } from "../../clinics/api";
 import { createAppointment, createGuestPatient } from "../api";
-import type { Appointment, Clinic, ClinicService, PatientDetails } from "../types";
+import type { Clinic, ClinicService, PatientDetails } from "../types";
 import { BookingReview } from "./BookingReview";
 import { ClinicChangeWarningDialog } from "./ClinicChangeWarningDialog";
 import { ClinicSelectionDialog } from "./ClinicSelectionDialog";
@@ -79,6 +80,7 @@ function getSubmissionErrorMessage(error: unknown) {
 }
 
 export function BookingFlow() {
+  const navigate = useNavigate();
   const isSubmittingBookingRef = useRef(false);
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [clinicsError, setClinicsError] = useState<string | null>(null);
@@ -101,8 +103,6 @@ export function BookingFlow() {
   const [patientDetails, setPatientDetails] = useState<PatientDetails | null>(
     null,
   );
-  const [createdAppointment, setCreatedAppointment] =
-    useState<Appointment | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
   const [clinicsReloadKey, setClinicsReloadKey] = useState(0);
@@ -215,7 +215,6 @@ export function BookingFlow() {
     setIsClinicDialogOpen(false);
     setActiveStep(0);
     setSubmissionError(null);
-    setCreatedAppointment(null);
   }
 
   function handleRequestClinicChange() {
@@ -233,7 +232,6 @@ export function BookingFlow() {
     setSelectedTime("");
     setPatientDetailsDraft(emptyPatientDetails);
     setPatientDetails(null);
-    setCreatedAppointment(null);
     setSubmissionError(null);
     isSubmittingBookingRef.current = false;
     setIsSubmittingBooking(false);
@@ -285,7 +283,17 @@ export function BookingFlow() {
         ...(patientDetails.notes ? { notes: patientDetails.notes } : {}),
       });
 
-      setCreatedAppointment(appointment);
+      const referenceNumber =
+        appointment.referenceNumber ?? appointment.referenceCode;
+
+      if (!referenceNumber) {
+        setSubmissionError(
+          "Appointment was created but no reference was returned.",
+        );
+        return;
+      }
+
+      navigate(`/booking?reference=${encodeURIComponent(referenceNumber)}`);
     } catch (error) {
       setSubmissionError(getSubmissionErrorMessage(error));
     } finally {
@@ -422,34 +430,7 @@ export function BookingFlow() {
             </CardContent>
           </Card>
 
-          {createdAppointment ? (
-            <Card>
-              <CardContent className="grid gap-4 py-6">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-accent-foreground">
-                    Booking confirmed
-                  </p>
-                  <h2 className="mt-2 text-2xl font-bold text-primary">
-                    Your appointment has been booked.
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    We created the guest patient profile and saved the
-                    appointment for the selected clinic.
-                  </p>
-                </div>
-                <div className="rounded-md border border-border bg-surface p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Appointment reference
-                  </p>
-                  <p className="mt-1 text-lg font-semibold text-foreground">
-                    {createdAppointment.referenceCode ??
-                      "Reference code not returned"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
+          <>
               <ol className="grid grid-cols-3 gap-2">
                 {bookingSteps.map((step, index) => {
                   const isCurrent = activeStep === index;
@@ -594,8 +575,7 @@ export function BookingFlow() {
                   ) : null}
                 </CardContent>
               </Card>
-            </>
-          )}
+          </>
         </section>
       )}
     </>

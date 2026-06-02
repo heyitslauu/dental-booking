@@ -1,4 +1,5 @@
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
+import { BookingConfirmationPage } from "../pages/BookingConfirmationPage";
 import { BookingPage } from "../pages/BookingPage";
 
 function HomePage() {
@@ -53,6 +54,7 @@ export function AppRouter() {
       <Routes>
         <Route element={<HomePage />} path="/" />
         <Route element={<BookingPage />} path="/book" />
+        <Route element={<BookingConfirmationPage />} path="/booking" />
         <Route element={<NotFoundPage />} path="*" />
       </Routes>
     </BrowserRouter>

@@ -99,6 +99,7 @@ export type CreateAppointmentPayload = {
 
 export type Appointment = {
   id: string;
+  referenceNumber: string;
   referenceCode?: string | null;
   clinicId: string;
   serviceId: string;

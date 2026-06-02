@@ -19,3 +19,9 @@ export function createAppointment(payload: CreateAppointmentPayload) {
     body: payload
   });
 }
+
+export function getAppointmentByReferenceNumber(referenceNumber: string) {
+  return apiRequest<Appointment>(
+    `/appointments/reference/${encodeURIComponent(referenceNumber)}`
+  );
+}
