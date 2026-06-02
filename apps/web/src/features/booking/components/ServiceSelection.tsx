@@ -13,7 +13,7 @@ type ServiceSelectionProps = {
 function formatPrice(priceCents: number) {
   return new Intl.NumberFormat("en-PH", {
     currency: "PHP",
-    style: "currency"
+    style: "currency",
   }).format(priceCents / 100);
 }
 
@@ -24,7 +24,7 @@ export function ServiceSelection({
   selectedService,
   services,
   onRetry,
-  onSelectService
+  onSelectService,
 }: ServiceSelectionProps) {
   if (!selectedClinic) {
     return (
@@ -99,12 +99,6 @@ export function ServiceSelection({
                     {service.description}
                   </p>
                 ) : null}
-                <p className="mt-2 text-sm text-zinc-500">
-                  {service.durationMinutes} min
-                  {Number.isFinite(service.priceCents)
-                    ? ` · ${formatPrice(service.priceCents)}`
-                    : ""}
-                </p>
               </div>
               <span
                 className={`rounded-full px-2 py-1 text-xs font-medium ${

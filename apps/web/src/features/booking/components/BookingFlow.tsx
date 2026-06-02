@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getClinicServices, getClinics } from "../../clinics/api";
 import type { Clinic, ClinicService } from "../types";
 import { BranchSelection } from "./BranchSelection";
+import { DateTimeSelection } from "./DateTimeSelection";
 import { ServiceSelection } from "./ServiceSelection";
 
 const bookingSteps = [
@@ -31,6 +32,23 @@ const bookingSteps = [
   }
 ];
 
+function getTodayDateValue() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function getStartAt(date: string, time: string) {
+  if (!date || !time) {
+    return null;
+  }
+
+  return new Date(`${date}T${time}:00`).toISOString();
+}
+
 export function BookingFlow() {
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [clinicsError, setClinicsError] = useState<string | null>(null);
@@ -42,8 +60,15 @@ export function BookingFlow() {
   const [services, setServices] = useState<ClinicService[]>([]);
   const [servicesError, setServicesError] = useState<string | null>(null);
   const [isLoadingServices, setIsLoadingServices] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
   const [clinicsReloadKey, setClinicsReloadKey] = useState(0);
   const [servicesReloadKey, setServicesReloadKey] = useState(0);
+  const minDate = useMemo(() => getTodayDateValue(), []);
+  const startAt = useMemo(
+    () => getStartAt(selectedDate, selectedTime),
+    [selectedDate, selectedTime]
+  );
 
   useEffect(() => {
     let isCurrent = true;
@@ -91,7 +116,22 @@ export function BookingFlow() {
 
   useEffect(() => {
     setSelectedService(null);
+    setSelectedDate("");
+    setSelectedTime("");
   }, [selectedClinic?.id]);
+
+  useEffect(() => {
+    setSelectedDate("");
+    setSelectedTime("");
+  }, [selectedService?.id]);
+
+  function handleSelectDate(date: string) {
+    if (date && date < minDate) {
+      return;
+    }
+
+    setSelectedDate(date);
+  }
 
   useEffect(() => {
     let isCurrent = true;
@@ -165,6 +205,18 @@ export function BookingFlow() {
           <p className="mt-1 text-sm font-medium text-zinc-900">
             {selectedService?.service.name ?? "None yet"}
           </p>
+          <p className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
+            Selected date
+          </p>
+          <p className="mt-1 text-sm font-medium text-zinc-900">
+            {selectedDate || "None yet"}
+          </p>
+          <p className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
+            Selected time
+          </p>
+          <p className="mt-1 text-sm font-medium text-zinc-900">
+            {selectedTime || "None yet"}
+          </p>
         </div>
       </aside>
 
@@ -204,7 +256,26 @@ export function BookingFlow() {
           />
         </section>
 
-        {bookingSteps.slice(2).map((step) => (
+        <section className="rounded-lg border border-zinc-200 bg-white p-5 md:col-span-2">
+          <h2 className="text-lg font-semibold text-zinc-950">
+            Date/time selection
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">
+            Choose an appointment date and time.
+          </p>
+          <DateTimeSelection
+            minDate={minDate}
+            onSelectDate={handleSelectDate}
+            onSelectTime={setSelectedTime}
+            selectedClinic={selectedClinic}
+            selectedDate={selectedDate}
+            selectedService={selectedService}
+            selectedTime={selectedTime}
+            startAt={startAt}
+          />
+        </section>
+
+        {bookingSteps.slice(3).map((step) => (
           <section
             className="rounded-lg border border-zinc-200 bg-white p-5"
             key={step.title}
