@@ -37,7 +37,11 @@ function getTodayDateValue() {
   return `${year}-${month}-${day}`;
 }
 
-function getAppointmentTimes(date: string, time: string) {
+function getAppointmentTimes(
+  date: string,
+  time: string,
+  durationMinutes = 60,
+) {
   if (!date || !time) {
     return { endAt: null, startAt: null };
   }
@@ -63,7 +67,7 @@ function getAppointmentTimes(date: string, time: string) {
 
   const endAt = new Date(startAt);
 
-  endAt.setHours(endAt.getHours() + 1);
+  endAt.setMinutes(endAt.getMinutes() + durationMinutes);
 
   return {
     endAt: endAt.toISOString(),
@@ -73,6 +77,10 @@ function getAppointmentTimes(date: string, time: string) {
 
 function getSubmissionErrorMessage(error: unknown) {
   if (error instanceof Error) {
+    if (error.message === "Failed to fetch") {
+      return "Unable to reach the booking server. Please check that the API is running and try again.";
+    }
+
     return error.message;
   }
 
@@ -103,14 +111,23 @@ export function BookingFlow() {
   const [patientDetails, setPatientDetails] = useState<PatientDetails | null>(
     null,
   );
+  const [hasTriedPatientDetailsNext, setHasTriedPatientDetailsNext] =
+    useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
   const [clinicsReloadKey, setClinicsReloadKey] = useState(0);
   const [servicesReloadKey, setServicesReloadKey] = useState(0);
   const minDate = useMemo(() => getTodayDateValue(), []);
+  const selectedServiceDurationMinutes =
+    selectedService?.service.durationMinutes ?? 60;
   const appointmentTimes = useMemo(
-    () => getAppointmentTimes(selectedDate, selectedTime),
-    [selectedDate, selectedTime],
+    () =>
+      getAppointmentTimes(
+        selectedDate,
+        selectedTime,
+        selectedServiceDurationMinutes,
+      ),
+    [selectedDate, selectedServiceDurationMinutes, selectedTime],
   );
   const startAt = appointmentTimes.startAt;
   const isSelectAppointmentComplete = Boolean(
@@ -232,6 +249,7 @@ export function BookingFlow() {
     setSelectedTime("");
     setPatientDetailsDraft(emptyPatientDetails);
     setPatientDetails(null);
+    setHasTriedPatientDetailsNext(false);
     setSubmissionError(null);
     isSubmittingBookingRef.current = false;
     setIsSubmittingBooking(false);
@@ -252,7 +270,11 @@ export function BookingFlow() {
       return;
     }
 
-    const { endAt } = getAppointmentTimes(selectedDate, selectedTime);
+    const { endAt } = getAppointmentTimes(
+      selectedDate,
+      selectedTime,
+      selectedServiceDurationMinutes,
+    );
 
     if (!endAt) {
       setSubmissionError("Select a valid appointment date and time.");
@@ -312,7 +334,12 @@ export function BookingFlow() {
     }
 
     if (activeStep === 1 && !isYourDetailsComplete) {
+      setHasTriedPatientDetailsNext(true);
       return;
+    }
+
+    if (activeStep === 1) {
+      setHasTriedPatientDetailsNext(false);
     }
 
     setActiveStep((step) => Math.min(step + 1, bookingSteps.length - 1));
@@ -522,6 +549,7 @@ export function BookingFlow() {
                         )}
                         details={patientDetailsDraft}
                         onChangeDetails={handleChangePatientDetails}
+                        showValidationErrors={hasTriedPatientDetailsNext}
                       />
                     </section>
                   ) : null}
@@ -563,8 +591,7 @@ export function BookingFlow() {
                       <Button
                         disabled={
                           activeStep === bookingSteps.length - 1 ||
-                          (activeStep === 0 && !isSelectAppointmentComplete) ||
-                          (activeStep === 1 && !isYourDetailsComplete)
+                          (activeStep === 0 && !isSelectAppointmentComplete)
                         }
                         onClick={goToNextStep}
                         type="button"
