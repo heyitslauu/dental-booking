@@ -1,9 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { AdminJwtGuard } from "../auth/admin-jwt.guard";
 import { ClinicsService } from "./clinics.service";
 import { CreateClinicStaffDto } from "./dto/create-clinic-staff.dto";
 import { UpdateClinicStaffDto } from "./dto/update-clinic-staff.dto";
 
 @Controller("clinic-staff")
+@UseGuards(AdminJwtGuard)
 export class ClinicStaffController {
   constructor(private readonly clinicsService: ClinicsService) {}
 

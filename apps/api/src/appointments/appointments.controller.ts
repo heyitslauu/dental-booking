@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { AdminJwtGuard } from "../auth/admin-jwt.guard";
 import { AppointmentsService } from "./appointments.service";
 import { CreateAppointmentDto } from "./dto/create-appointment.dto";
 import { ListAppointmentsDto } from "./dto/list-appointments.dto";
@@ -9,6 +10,7 @@ export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
   @Get()
+  @UseGuards(AdminJwtGuard)
   findMany(@Query() query: ListAppointmentsDto) {
     return this.appointmentsService.findMany(query);
   }
@@ -24,6 +26,7 @@ export class AppointmentsController {
   }
 
   @Patch(":id/status")
+  @UseGuards(AdminJwtGuard)
   updateStatus(
     @Param("id") id: string,
     @Body() dto: UpdateAppointmentStatusDto

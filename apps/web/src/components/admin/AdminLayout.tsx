@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { clearAdminToken } from "../../features/admin/auth";
 import { cn } from "../../lib/utils";
+import { Button } from "../ui/button";
 
 const adminNavItems = [
   {
@@ -21,6 +23,12 @@ type AdminLayoutProps = {
 
 export function AdminLayout({ actions, children, title }: AdminLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    clearAdminToken();
+    navigate("/admin/login", { replace: true });
+  }
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -35,9 +43,12 @@ export function AdminLayout({ actions, children, title }: AdminLayoutProps) {
                 {title}
               </h1>
             </div>
-            {actions ? (
-              <div className="flex flex-wrap items-center gap-3">{actions}</div>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-3">
+              {actions}
+              <Button onClick={handleLogout} type="button" variant="outline">
+                Logout
+              </Button>
+            </div>
           </div>
 
           <nav

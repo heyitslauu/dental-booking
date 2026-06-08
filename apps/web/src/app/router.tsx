@@ -1,6 +1,8 @@
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
+import { ProtectedAdminRoute } from "../components/admin/ProtectedAdminRoute";
 import { AdminAppointmentsPage } from "../pages/AdminAppointmentsPage";
 import { AdminClinicsPage } from "../pages/AdminClinicsPage";
+import { AdminLoginPage } from "../pages/AdminLoginPage";
 import { AdminServicesPage } from "../pages/AdminServicesPage";
 import { AdminStaffPage } from "../pages/AdminStaffPage";
 import { BookingConfirmationPage } from "../pages/BookingConfirmationPage";
@@ -57,11 +59,47 @@ export function AppRouter() {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route element={<HomePage />} path="/" />
-        <Route element={<AdminAppointmentsPage />} path="/admin/appointment" />
-        <Route element={<AdminAppointmentsPage />} path="/admin/appointments" />
-        <Route element={<AdminClinicsPage />} path="/admin/clinics" />
-        <Route element={<AdminServicesPage />} path="/admin/services" />
-        <Route element={<AdminStaffPage />} path="/admin/staff" />
+        <Route element={<AdminLoginPage />} path="/admin/login" />
+        <Route
+          element={
+            <ProtectedAdminRoute>
+              <AdminAppointmentsPage />
+            </ProtectedAdminRoute>
+          }
+          path="/admin/appointment"
+        />
+        <Route
+          element={
+            <ProtectedAdminRoute>
+              <AdminAppointmentsPage />
+            </ProtectedAdminRoute>
+          }
+          path="/admin/appointments"
+        />
+        <Route
+          element={
+            <ProtectedAdminRoute>
+              <AdminClinicsPage />
+            </ProtectedAdminRoute>
+          }
+          path="/admin/clinics"
+        />
+        <Route
+          element={
+            <ProtectedAdminRoute>
+              <AdminServicesPage />
+            </ProtectedAdminRoute>
+          }
+          path="/admin/services"
+        />
+        <Route
+          element={
+            <ProtectedAdminRoute>
+              <AdminStaffPage />
+            </ProtectedAdminRoute>
+          }
+          path="/admin/staff"
+        />
         <Route element={<BookingPage />} path="/book" />
         <Route element={<BookingConfirmationPage />} path="/booking" />
         <Route element={<NotFoundPage />} path="*" />

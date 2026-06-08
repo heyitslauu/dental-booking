@@ -1,4 +1,5 @@
 import { PrismaClient, UserRole } from "@prisma/client";
+import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -15,8 +16,19 @@ async function main() {
 
   const organization = await prisma.organization.create({
     data: {
-      name: "Bright Smile Dental Group"
-    }
+      name: "Bright Smile Dental Group",
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      email: process.env.SEED_ADMIN_EMAIL || "admin@example.com",
+      passwordHash: await bcrypt.hash(
+        process.env.SEED_ADMIN_PASSWORD || "Admin123!",
+        12,
+      ),
+      role: UserRole.ADMIN,
+    },
   });
 
   const [downtown, uptown] = await Promise.all([
@@ -26,8 +38,8 @@ async function main() {
         name: "Bright Smile Downtown",
         slug: "downtown",
         address: "101 Main Street",
-        phone: "+1 555 0101"
-      }
+        phone: "+1 555 0101",
+      },
     }),
     prisma.clinic.create({
       data: {
@@ -35,30 +47,30 @@ async function main() {
         name: "Bright Smile Uptown",
         slug: "uptown",
         address: "22 North Avenue",
-        phone: "+1 555 0202"
-      }
-    })
+        phone: "+1 555 0202",
+      },
+    }),
   ]);
 
   const [cleaning, whitening, extraction] = await Promise.all([
     prisma.service.create({
       data: {
         name: "Dental Cleaning",
-        description: "Routine cleaning and oral hygiene check."
-      }
+        description: "Routine cleaning and oral hygiene check.",
+      },
     }),
     prisma.service.create({
       data: {
         name: "Teeth Whitening",
-        description: "In-clinic whitening treatment."
-      }
+        description: "In-clinic whitening treatment.",
+      },
     }),
     prisma.service.create({
       data: {
         name: "Tooth Extraction",
-        description: "Simple extraction consultation and procedure."
-      }
-    })
+        description: "Simple extraction consultation and procedure.",
+      },
+    }),
   ]);
 
   await prisma.clinicService.createMany({
@@ -67,42 +79,42 @@ async function main() {
         clinicId: downtown.id,
         serviceId: cleaning.id,
         priceCents: 8500,
-        durationMinutes: 45
+        durationMinutes: 45,
       },
       {
         clinicId: downtown.id,
         serviceId: whitening.id,
         priceCents: 22000,
-        durationMinutes: 60
+        durationMinutes: 60,
       },
       {
         clinicId: uptown.id,
         serviceId: cleaning.id,
         priceCents: 9000,
-        durationMinutes: 50
+        durationMinutes: 50,
       },
       {
         clinicId: uptown.id,
         serviceId: extraction.id,
         priceCents: 18000,
-        durationMinutes: 75
-      }
-    ]
+        durationMinutes: 75,
+      },
+    ],
   });
 
   const [drRiveraUser, drChenUser] = await Promise.all([
     prisma.user.create({
       data: {
         email: "dr.rivera@example.com",
-        role: UserRole.STAFF
-      }
+        role: UserRole.STAFF,
+      },
     }),
     prisma.user.create({
       data: {
         email: "dr.chen@example.com",
-        role: UserRole.STAFF
-      }
-    })
+        role: UserRole.STAFF,
+      },
+    }),
   ]);
 
   const [drRivera, drChen] = await Promise.all([
@@ -111,34 +123,34 @@ async function main() {
         userId: drRiveraUser.id,
         firstName: "Maya",
         lastName: "Rivera",
-        title: "Dentist"
-      }
+        title: "Dentist",
+      },
     }),
     prisma.staffProfile.create({
       data: {
         userId: drChenUser.id,
         firstName: "Elliot",
         lastName: "Chen",
-        title: "Dental Hygienist"
-      }
-    })
+        title: "Dental Hygienist",
+      },
+    }),
   ]);
 
   await prisma.clinicStaff.createMany({
     data: [
       {
         clinicId: downtown.id,
-        staffProfileId: drRivera.id
+        staffProfileId: drRivera.id,
       },
       {
         clinicId: downtown.id,
-        staffProfileId: drChen.id
+        staffProfileId: drChen.id,
       },
       {
         clinicId: uptown.id,
-        staffProfileId: drRivera.id
-      }
-    ]
+        staffProfileId: drRivera.id,
+      },
+    ],
   });
 
   console.log("Seed data created");

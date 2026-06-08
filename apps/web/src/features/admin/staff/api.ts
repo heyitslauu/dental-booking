@@ -1,11 +1,5 @@
-import axios, { AxiosError } from "axios";
 import type { Clinic, ClinicStaff, StaffProfile } from "../../booking/types";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
-
-const adminApi = axios.create({
-  baseURL: API_BASE_URL.replace(/\/+$/, ""),
-});
+import { adminApi, getApiErrorMessage } from "../apiClient";
 
 export type AdminStaffProfile = StaffProfile & {
   clinicStaff: Array<ClinicStaff & { clinic: Clinic }>;
@@ -22,30 +16,6 @@ export type ClinicStaffPayload = {
   staffProfileId: string;
   isActive?: boolean;
 };
-
-function getApiErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof AxiosError) {
-    const message = error.response?.data?.message;
-
-    if (typeof message === "string") {
-      return message;
-    }
-
-    if (Array.isArray(message)) {
-      return message.join(", ");
-    }
-
-    if (!error.response) {
-      return "Unable to reach the booking server. Please check that the API is running.";
-    }
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallback;
-}
 
 export async function listAdminStaff() {
   try {
