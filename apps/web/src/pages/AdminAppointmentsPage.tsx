@@ -52,6 +52,13 @@ const statusLabels: Record<AppointmentStatus, string> = {
   PENDING: "Pending",
 };
 
+const emptyFilters: AppointmentFilters = {
+  clinicId: "",
+  from: "",
+  status: "",
+  to: "",
+};
+
 function formatDateTime(value: string) {
   const date = new Date(value);
 
@@ -63,6 +70,25 @@ function formatDateTime(value: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
+}
+
+function formatTime(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Not provided";
+  }
+
+  return new Intl.DateTimeFormat("en-PH", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatAppointmentRange(appointment: Appointment) {
+  return `${formatDateTime(appointment.startAt)} - ${formatTime(
+    appointment.endAt,
+  )}`;
 }
 
 function getPatientName(appointment: Appointment) {
@@ -83,12 +109,7 @@ function getStatusVariant(status: AppointmentStatus) {
 
 export function AdminAppointmentsPage() {
   const queryClient = useQueryClient();
-  const [filters, setFilters] = useState<AppointmentFilters>({
-    clinicId: "",
-    from: "",
-    status: "",
-    to: "",
-  });
+  const [filters, setFilters] = useState<AppointmentFilters>(emptyFilters);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<
     string | null
   >(null);
@@ -116,6 +137,15 @@ export function AdminAppointmentsPage() {
     mutationFn: updateAppointmentStatus,
     onSuccess: (updatedAppointment) => {
       setNextStatus(updatedAppointment.status);
+      queryClient.setQueriesData<Appointment[]>(
+        { queryKey: ["admin", "appointments"] },
+        (currentAppointments) =>
+          currentAppointments?.map((appointment) =>
+            appointment.id === updatedAppointment.id
+              ? updatedAppointment
+              : appointment,
+          ),
+      );
       void queryClient.invalidateQueries({
         queryKey: ["admin", "appointments"],
       });
@@ -126,16 +156,14 @@ export function AdminAppointmentsPage() {
     setFilters((currentFilters) => ({
       ...currentFilters,
       [field]: value,
+      ...(field === "from" && currentFilters.to && value > currentFilters.to
+        ? { to: "" }
+        : {}),
     }));
   }
 
   function clearFilters() {
-    setFilters({
-      clinicId: "",
-      from: "",
-      status: "",
-      to: "",
-    });
+    setFilters(emptyFilters);
   }
 
   function openAppointment(appointment: Appointment) {
@@ -161,6 +189,7 @@ export function AdminAppointmentsPage() {
   }
 
   const appointments = appointmentsQuery.data ?? [];
+  const hasActiveFilters = Object.values(filters).some(Boolean);
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -204,6 +233,11 @@ export function AdminAppointmentsPage() {
                     </option>
                   ))}
                 </Select>
+                {clinicsQuery.error ? (
+                  <span className="text-xs font-medium text-destructive">
+                    Unable to load clinics.
+                  </span>
+                ) : null}
               </Label>
 
               <Label className="grid gap-2">
@@ -241,7 +275,12 @@ export function AdminAppointmentsPage() {
               </Label>
 
               <div className="flex items-end">
-                <Button onClick={clearFilters} type="button" variant="outline">
+                <Button
+                  disabled={!hasActiveFilters}
+                  onClick={clearFilters}
+                  type="button"
+                  variant="outline"
+                >
                   Clear filters
                 </Button>
               </div>
@@ -260,10 +299,20 @@ export function AdminAppointmentsPage() {
           </CardHeader>
           <CardContent>
             {appointmentsQuery.error ? (
-              <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm font-medium text-destructive">
-                {appointmentsQuery.error instanceof Error
-                  ? appointmentsQuery.error.message
-                  : "Unable to load appointments."}
+              <div className="grid gap-3 rounded-md border border-destructive/30 bg-destructive/10 p-4">
+                <p className="text-sm font-medium text-destructive">
+                  {appointmentsQuery.error instanceof Error
+                    ? appointmentsQuery.error.message
+                    : "Unable to load appointments."}
+                </p>
+                <Button
+                  className="w-fit"
+                  onClick={() => void appointmentsQuery.refetch()}
+                  type="button"
+                  variant="outline"
+                >
+                  Retry
+                </Button>
               </div>
             ) : null}
 
@@ -311,7 +360,7 @@ export function AdminAppointmentsPage() {
                       <TableCell>{getPatientName(appointment)}</TableCell>
                       <TableCell>{appointment.clinic.name}</TableCell>
                       <TableCell>{appointment.service.name}</TableCell>
-                      <TableCell>{formatDateTime(appointment.startAt)}</TableCell>
+                      <TableCell>{formatAppointmentRange(appointment)}</TableCell>
                       <TableCell>
                         <Badge variant={getStatusVariant(appointment.status)}>
                           {statusLabels[appointment.status]}
@@ -395,9 +444,11 @@ export function AdminAppointmentsPage() {
                 <Label className="grid gap-2">
                   <span>Status</span>
                   <Select
-                    onChange={(event) =>
-                      setNextStatus(event.target.value as AppointmentStatus)
-                    }
+                    disabled={statusMutation.isPending}
+                    onChange={(event) => {
+                      setNextStatus(event.target.value as AppointmentStatus);
+                      statusMutation.reset();
+                    }}
                     value={nextStatus}
                   >
                     {appointmentStatuses.map((status) => (
