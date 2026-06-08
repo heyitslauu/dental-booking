@@ -4,7 +4,9 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { Eye } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -95,6 +97,10 @@ function getPatientName(appointment: Appointment) {
   return `${appointment.patientProfile.firstName} ${appointment.patientProfile.lastName}`.trim();
 }
 
+function getPatientContact(appointment: Appointment) {
+  return appointment.patientProfile.phone ?? appointment.patientProfile.email;
+}
+
 function getStatusVariant(status: AppointmentStatus) {
   if (status === "CONFIRMED" || status === "COMPLETED") {
     return "success" as const;
@@ -137,6 +143,12 @@ export function AdminAppointmentsPage() {
     mutationFn: updateAppointmentStatus,
     onSuccess: (updatedAppointment) => {
       setNextStatus(updatedAppointment.status);
+      closeAppointment();
+      toast.success("Appointment status updated.", {
+        description: `${updatedAppointment.referenceNumber} is now ${
+          statusLabels[updatedAppointment.status]
+        }.`,
+      });
       queryClient.setQueriesData<Appointment[]>(
         { queryKey: ["admin", "appointments"] },
         (currentAppointments) =>
@@ -148,6 +160,14 @@ export function AdminAppointmentsPage() {
       );
       void queryClient.invalidateQueries({
         queryKey: ["admin", "appointments"],
+      });
+    },
+    onError: (error) => {
+      toast.error("Status update failed.", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Unable to update appointment status.",
       });
     },
   });
@@ -322,9 +342,10 @@ export function AdminAppointmentsPage() {
                   <TableRow>
                     <TableHead>Reference</TableHead>
                     <TableHead>Patient</TableHead>
-                    <TableHead>Clinic</TableHead>
-                    <TableHead>Service</TableHead>
-                    <TableHead>Date/time</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Clinic
+                    </TableHead>
+                    <TableHead>Service details</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -334,7 +355,7 @@ export function AdminAppointmentsPage() {
                     <TableRow>
                       <TableCell
                         className="py-8 text-center text-muted-foreground"
-                        colSpan={7}
+                        colSpan={6}
                       >
                         Loading appointments...
                       </TableCell>
@@ -345,7 +366,7 @@ export function AdminAppointmentsPage() {
                     <TableRow>
                       <TableCell
                         className="py-8 text-center text-muted-foreground"
-                        colSpan={7}
+                        colSpan={6}
                       >
                         No appointments match the current filters.
                       </TableCell>
@@ -357,10 +378,27 @@ export function AdminAppointmentsPage() {
                       <TableCell className="font-medium">
                         {appointment.referenceNumber}
                       </TableCell>
-                      <TableCell>{getPatientName(appointment)}</TableCell>
-                      <TableCell>{appointment.clinic.name}</TableCell>
-                      <TableCell>{appointment.service.name}</TableCell>
-                      <TableCell>{formatAppointmentRange(appointment)}</TableCell>
+                      <TableCell>
+                        <p className="font-medium">
+                          {getPatientName(appointment)}
+                        </p>
+                        {getPatientContact(appointment) ? (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {getPatientContact(appointment)}
+                          </p>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {appointment.clinic.name}
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium">
+                          {appointment.service.name}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {formatAppointmentRange(appointment)}
+                        </p>
+                      </TableCell>
                       <TableCell>
                         <Badge variant={getStatusVariant(appointment.status)}>
                           {statusLabels[appointment.status]}
@@ -368,12 +406,13 @@ export function AdminAppointmentsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
-                          className="h-8 px-3"
+                          aria-label={`View appointment ${appointment.referenceNumber}`}
+                          className="h-8 w-8 px-0"
                           onClick={() => openAppointment(appointment)}
                           type="button"
                           variant="outline"
                         >
-                          View
+                          <Eye aria-hidden className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
