@@ -10,6 +10,7 @@ export type PatientDetailsErrors = Partial<Record<keyof PatientDetails, string>>
 type PatientDetailsFormProps = {
   canEnterDetails: boolean;
   details: PatientDetails;
+  showValidationErrors?: boolean;
   onChangeDetails: (details: PatientDetails) => void;
 };
 
@@ -72,6 +73,7 @@ export function isPatientDetailsValid(details: PatientDetails) {
 export function PatientDetailsForm({
   canEnterDetails,
   details,
+  showValidationErrors = false,
   onChangeDetails
 }: PatientDetailsFormProps) {
   const [touchedFields, setTouchedFields] = useState<
@@ -106,7 +108,11 @@ export function PatientDetailsForm({
     <div className="mt-5 grid gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          error={touchedFields.firstName ? errors.firstName : undefined}
+          error={
+            showValidationErrors || touchedFields.firstName
+              ? errors.firstName
+              : undefined
+          }
           label="First name"
           name="firstName"
           onBlur={() => touchField("firstName")}
@@ -115,7 +121,11 @@ export function PatientDetailsForm({
           value={details.firstName}
         />
         <Field
-          error={touchedFields.lastName ? errors.lastName : undefined}
+          error={
+            showValidationErrors || touchedFields.lastName
+              ? errors.lastName
+              : undefined
+          }
           label="Last name"
           name="lastName"
           onBlur={() => touchField("lastName")}
@@ -128,7 +138,9 @@ export function PatientDetailsForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           error={
-            touchedFields.contactNumber ? errors.contactNumber : undefined
+            showValidationErrors || touchedFields.contactNumber
+              ? errors.contactNumber
+              : undefined
           }
           label="Contact number"
           maxLength={11}
@@ -143,7 +155,11 @@ export function PatientDetailsForm({
           value={details.contactNumber}
         />
         <Field
-          error={touchedFields.email ? errors.email : undefined}
+          error={
+            showValidationErrors || touchedFields.email
+              ? errors.email
+              : undefined
+          }
           label="Email"
           name="email"
           onBlur={() => touchField("email")}
