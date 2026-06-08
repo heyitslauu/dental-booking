@@ -1,4 +1,5 @@
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
+import { AdminAppointmentsPage } from "../pages/AdminAppointmentsPage";
 import { BookingConfirmationPage } from "../pages/BookingConfirmationPage";
 import { BookingPage } from "../pages/BookingPage";
 
@@ -53,6 +54,8 @@ export function AppRouter() {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route element={<HomePage />} path="/" />
+        <Route element={<AdminAppointmentsPage />} path="/admin/appointment" />
+        <Route element={<AdminAppointmentsPage />} path="/admin/appointments" />
         <Route element={<BookingPage />} path="/book" />
         <Route element={<BookingConfirmationPage />} path="/booking" />
         <Route element={<NotFoundPage />} path="*" />
