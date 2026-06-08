@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { AdminLayout } from "../components/admin/AdminLayout";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -175,29 +175,14 @@ export function AdminClinicsPage() {
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-8">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-accent-foreground">
-              Back office
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-normal text-primary">
-              Clinic branches
-            </h1>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-primary transition hover:bg-surface"
-              to="/admin/appointments"
-            >
-              Appointments
-            </Link>
-            <Button onClick={openCreateDialog} type="button">
-              New branch
-            </Button>
-          </div>
-        </header>
+    <AdminLayout
+      actions={
+        <Button onClick={openCreateDialog} type="button">
+          New branch
+        </Button>
+      }
+      title="Clinic branches"
+    >
 
         <Card>
           <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
@@ -304,8 +289,6 @@ export function AdminClinicsPage() {
             ) : null}
           </CardContent>
         </Card>
-      </div>
-
       <Dialog
         onOpenChange={(open) => {
           if (!open) {
@@ -371,6 +354,6 @@ export function AdminClinicsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </AdminLayout>
   );
 }

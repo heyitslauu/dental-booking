@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Power, PowerOff } from "lucide-react";
-import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { AdminLayout } from "../components/admin/AdminLayout";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -344,41 +344,20 @@ export function AdminServicesPage() {
   const unassignedClinics = getUnassignedClinics(selectedService);
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-8">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-accent-foreground">
-              Back office
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-normal text-primary">
-              Services
-            </h1>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-primary transition hover:bg-surface"
-              to="/admin/appointments"
-            >
-              Appointments
-            </Link>
-            <Link
-              className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-primary transition hover:bg-surface"
-              to="/admin/clinics"
-            >
-              Clinics
-            </Link>
-            <Button
-              aria-label="Create service"
-              className="h-10 w-10 p-0"
-              onClick={openCreateServiceDialog}
-              title="Create service"
-              type="button"
-            >
-              <Plus aria-hidden="true" className="h-4 w-4" />
-            </Button>
-          </div>
-        </header>
+    <AdminLayout
+      actions={
+        <Button
+          aria-label="Create service"
+          className="h-10 w-10 p-0"
+          onClick={openCreateServiceDialog}
+          title="Create service"
+          type="button"
+        >
+          <Plus aria-hidden="true" className="h-4 w-4" />
+        </Button>
+      }
+      title="Services"
+    >
 
         <Card>
           <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
@@ -561,8 +540,6 @@ export function AdminServicesPage() {
             ) : null}
           </CardContent>
         </Card>
-      </div>
-
       <Dialog
         onOpenChange={(open) => {
           if (!open) {
@@ -703,6 +680,6 @@ export function AdminServicesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </AdminLayout>
   );
 }

@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { Eye } from "lucide-react";
 import { Link } from "react-router-dom";
+import { AdminLayout } from "../components/admin/AdminLayout";
 import { toast } from "sonner";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -212,24 +213,17 @@ export function AdminAppointmentsPage() {
   const hasActiveFilters = Object.values(filters).some(Boolean);
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-8">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-accent-foreground">
-              Back office
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-normal text-primary">
-              Appointments
-            </h1>
-          </div>
-          <Link
-            className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-primary transition hover:bg-surface"
-            to="/book"
-          >
-            Guest booking
-          </Link>
-        </header>
+    <AdminLayout
+      actions={
+        <Link
+          className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-primary transition hover:bg-surface"
+          to="/book"
+        >
+          Guest booking
+        </Link>
+      }
+      title="Appointments"
+    >
 
         <Card>
           <CardHeader>
@@ -422,8 +416,6 @@ export function AdminAppointmentsPage() {
             ) : null}
           </CardContent>
         </Card>
-      </div>
-
       <Dialog
         onOpenChange={(open) => {
           if (!open) {
@@ -523,7 +515,7 @@ export function AdminAppointmentsPage() {
           </DialogContent>
         ) : null}
       </Dialog>
-    </main>
+    </AdminLayout>
   );
 }
 
