@@ -21,8 +21,6 @@ export type Service = {
   id: string;
   name: string;
   description: string | null;
-  durationMinutes: number;
-  priceCents: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -32,7 +30,10 @@ export type ClinicService = {
   id: string;
   clinicId: string;
   serviceId: string;
+  priceCents: number;
+  durationMinutes: number;
   isActive: boolean;
+  clinic?: Clinic;
   service: Service;
   createdAt: string;
   updatedAt: string;

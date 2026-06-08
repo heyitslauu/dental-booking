@@ -1,6 +1,7 @@
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import { AdminAppointmentsPage } from "../pages/AdminAppointmentsPage";
 import { AdminClinicsPage } from "../pages/AdminClinicsPage";
+import { AdminServicesPage } from "../pages/AdminServicesPage";
 import { BookingConfirmationPage } from "../pages/BookingConfirmationPage";
 import { BookingPage } from "../pages/BookingPage";
 
@@ -58,6 +59,7 @@ export function AppRouter() {
         <Route element={<AdminAppointmentsPage />} path="/admin/appointment" />
         <Route element={<AdminAppointmentsPage />} path="/admin/appointments" />
         <Route element={<AdminClinicsPage />} path="/admin/clinics" />
+        <Route element={<AdminServicesPage />} path="/admin/services" />
         <Route element={<BookingPage />} path="/book" />
         <Route element={<BookingConfirmationPage />} path="/booking" />
         <Route element={<NotFoundPage />} path="*" />

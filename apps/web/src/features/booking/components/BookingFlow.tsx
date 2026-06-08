@@ -118,8 +118,7 @@ export function BookingFlow() {
   const [clinicsReloadKey, setClinicsReloadKey] = useState(0);
   const [servicesReloadKey, setServicesReloadKey] = useState(0);
   const minDate = useMemo(() => getTodayDateValue(), []);
-  const selectedServiceDurationMinutes =
-    selectedService?.service.durationMinutes ?? 60;
+  const selectedServiceDurationMinutes = selectedService?.durationMinutes ?? 60;
   const appointmentTimes = useMemo(
     () =>
       getAppointmentTimes(
