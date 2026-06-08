@@ -1,9 +1,19 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { CreateClinicDto } from "./dto/create-clinic.dto";
 import { CreateClinicServiceDto } from "./dto/create-clinic-service.dto";
 import { CreateClinicStaffDto } from "./dto/create-clinic-staff.dto";
+import { UpdateClinicDto } from "./dto/update-clinic.dto";
 import { UpdateClinicServiceDto } from "./dto/update-clinic-service.dto";
 import { UpdateClinicStaffDto } from "./dto/update-clinic-staff.dto";
+
+function getSlug(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 @Injectable()
 export class ClinicsService {
@@ -13,6 +23,59 @@ export class ClinicsService {
     return this.prisma.clinic.findMany({
       where: { isActive: true },
       orderBy: { name: "asc" }
+    });
+  }
+
+  findAllClinics() {
+    return this.prisma.clinic.findMany({
+      orderBy: { name: "asc" }
+    });
+  }
+
+  async createClinic(dto: CreateClinicDto) {
+    const organization = await this.prisma.organization.findFirst({
+      orderBy: { createdAt: "asc" }
+    });
+
+    if (!organization) {
+      throw new BadRequestException("Create an organization before adding clinics.");
+    }
+
+    const slug = getSlug(dto.slug || dto.name);
+
+    if (!slug) {
+      throw new BadRequestException("Clinic slug is required.");
+    }
+
+    return this.prisma.clinic.create({
+      data: {
+        organizationId: organization.id,
+        name: dto.name.trim(),
+        slug,
+        address: dto.address?.trim() || null,
+        phone: dto.phone?.trim() || null
+      }
+    });
+  }
+
+  async updateClinic(clinicId: string, dto: UpdateClinicDto) {
+    await this.ensureClinicExists(clinicId);
+
+    const nextSlug = dto.slug === undefined ? undefined : getSlug(dto.slug);
+
+    if (dto.slug !== undefined && !nextSlug) {
+      throw new BadRequestException("Clinic slug is required.");
+    }
+
+    return this.prisma.clinic.update({
+      where: { id: clinicId },
+      data: {
+        name: dto.name?.trim(),
+        slug: nextSlug,
+        address: dto.address === undefined ? undefined : dto.address.trim() || null,
+        phone: dto.phone === undefined ? undefined : dto.phone.trim() || null,
+        isActive: dto.isActive
+      }
     });
   }
 
