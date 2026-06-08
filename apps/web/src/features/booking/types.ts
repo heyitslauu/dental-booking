@@ -55,6 +55,7 @@ export type ClinicStaff = {
   clinicId: string;
   staffProfileId: string;
   isActive: boolean;
+  clinic?: Clinic;
   staffProfile: StaffProfile;
   createdAt: string;
   updatedAt: string;
