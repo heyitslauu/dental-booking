@@ -10,7 +10,7 @@ const badgeVariants: Record<NonNullable<BadgeProps["variant"]>, string> = {
   destructive: "border-destructive/25 bg-destructive/10 text-destructive",
   muted: "border-border bg-surface text-muted-foreground",
   success: "border-emerald-600/25 bg-emerald-600/10 text-emerald-700",
-  warning: "border-amber-600/25 bg-amber-500/10 text-amber-700",
+  warning: "border-primary/25 bg-primary/10 text-primary",
 };
 
 export function Badge({
