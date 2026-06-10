@@ -1,13 +1,16 @@
 import {
   CalendarDays,
   ClipboardList,
+  LogOut,
   Stethoscope,
   Users,
   UserCog,
   Smile,
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { clearAdminToken, getAdminUser } from "../../features/admin/auth";
 import { cn } from "../../lib/utils";
+import { Button } from "../ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -39,6 +42,18 @@ export const getAdminNavTitle = (pathname: string) => {
 
 export const AdminSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const adminUser = getAdminUser();
+  const displayName = getDisplayName(
+    adminUser?.firstName,
+    adminUser?.lastName,
+    adminUser?.email,
+  );
+
+  function handleLogout() {
+    clearAdminToken();
+    navigate("/login", { replace: true });
+  }
 
   return (
     <Sidebar>
@@ -81,11 +96,39 @@ export const AdminSidebar = () => {
         </nav>
       </SidebarContent>
 
-      <SidebarFooter>
-        <p className="text-xs leading-5 text-muted-foreground">
-          Manage clinics, schedules, services, and staff from one workspace.
-        </p>
+      <SidebarFooter className="grid gap-3">
+        <div className="grid gap-1 rounded-md bg-muted/50 p-3">
+          <p className="truncate text-sm font-medium text-foreground">
+            {displayName}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {adminUser?.email ?? "Signed in"}
+          </p>
+        </div>
+        <Button
+          className="w-full justify-start"
+          onClick={handleLogout}
+          type="button"
+          variant="outline"
+        >
+          <LogOut aria-hidden="true" className="mr-2 h-4 w-4" />
+          Logout
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );
 };
+
+function getDisplayName(
+  firstName?: string | null,
+  lastName?: string | null,
+  email?: string,
+) {
+  const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+
+  if (fullName) {
+    return fullName;
+  }
+
+  return email?.split("@")[0] ?? "Admin user";
+}

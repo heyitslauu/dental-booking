@@ -223,6 +223,11 @@ export function AdminAppointmentsPage() {
           Guest booking
         </Link>
       }
+      isRefreshing={appointmentsQuery.isFetching || clinicsQuery.isFetching}
+      onRefresh={() => {
+        void appointmentsQuery.refetch();
+        void clinicsQuery.refetch();
+      }}
       title="Appointments"
     >
 

@@ -183,6 +183,10 @@ export function AdminClinicsPage() {
           New branch
         </Button>
       }
+      isRefreshing={clinicsQuery.isFetching}
+      onRefresh={() => {
+        void clinicsQuery.refetch();
+      }}
       title="Clinic branches"
     >
 

@@ -17,6 +17,7 @@ export class AuthService {
           where: { isActive: true },
           take: 1,
         },
+        staffProfile: true,
       },
     });
 
@@ -48,6 +49,8 @@ export class AuthService {
         email: user.email,
         id: user.id,
         role: user.role,
+        firstName: user.staffProfile?.firstName ?? null,
+        lastName: user.staffProfile?.lastName ?? null,
       },
     };
   }

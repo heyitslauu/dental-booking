@@ -292,6 +292,11 @@ export function AdminStaffPage() {
           Create staff
         </Button>
       }
+      isRefreshing={staffQuery.isFetching || clinicsQuery.isFetching}
+      onRefresh={() => {
+        void staffQuery.refetch();
+        void clinicsQuery.refetch();
+      }}
       title="Staff"
     >
 

@@ -2,11 +2,16 @@ import axios, { AxiosError } from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 const ADMIN_TOKEN_KEY = "dental-booking-admin-token";
+const ADMIN_USER_KEY = "dental-booking-admin-user";
+
+export type AdminRole = "SUPER_ADMIN" | "ORG_ADMIN" | "STAFF" | "PATIENT";
 
 export type AdminUser = {
   email: string;
+  firstName?: string | null;
   id: string;
-  role: "ADMIN";
+  lastName?: string | null;
+  role: AdminRole;
 };
 
 export type LoginResponse = {
@@ -26,8 +31,28 @@ export function setAdminToken(token: string) {
   window.localStorage.setItem(ADMIN_TOKEN_KEY, token);
 }
 
+export function getAdminUser() {
+  const storedUser = window.localStorage.getItem(ADMIN_USER_KEY);
+
+  if (!storedUser) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(storedUser) as AdminUser;
+  } catch {
+    window.localStorage.removeItem(ADMIN_USER_KEY);
+    return null;
+  }
+}
+
+export function setAdminUser(user: AdminUser) {
+  window.localStorage.setItem(ADMIN_USER_KEY, JSON.stringify(user));
+}
+
 export function clearAdminToken() {
   window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+  window.localStorage.removeItem(ADMIN_USER_KEY);
 }
 
 export function isAdminAuthenticated() {
@@ -72,6 +97,7 @@ export async function loginAdmin({
     });
 
     setAdminToken(response.data.accessToken);
+    setAdminUser(response.data.user);
 
     return response.data;
   } catch (error) {

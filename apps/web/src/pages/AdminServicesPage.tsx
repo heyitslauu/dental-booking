@@ -351,6 +351,11 @@ export function AdminServicesPage() {
           Create service
         </Button>
       }
+      isRefreshing={servicesQuery.isFetching || clinicsQuery.isFetching}
+      onRefresh={() => {
+        void servicesQuery.refetch();
+        void clinicsQuery.refetch();
+      }}
       title="Services"
     >
 

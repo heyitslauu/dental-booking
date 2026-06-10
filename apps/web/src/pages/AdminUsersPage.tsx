@@ -364,6 +364,11 @@ export function AdminUsersPage() {
           </Dialog>
         </>
       }
+      isRefreshing={usersQuery.isFetching || clinicsQuery.isFetching}
+      onRefresh={() => {
+        void usersQuery.refetch();
+        void clinicsQuery.refetch();
+      }}
       title="Users"
     >
       <div className="grid gap-6">

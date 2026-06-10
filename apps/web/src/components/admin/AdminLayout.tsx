@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
-import { clearAdminToken } from "../../features/admin/auth";
+import { RefreshCw } from "lucide-react";
+import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "../ui/sidebar";
@@ -10,17 +10,18 @@ import { AdminSidebar } from "./admin-sidebar";
 type AdminLayoutProps = {
   actions?: ReactNode;
   children: ReactNode;
+  isRefreshing?: boolean;
+  onRefresh?: () => void;
   title: string;
 };
 
-export function AdminLayout({ actions, children, title }: AdminLayoutProps) {
-  const navigate = useNavigate();
-
-  function handleLogout() {
-    clearAdminToken();
-    navigate("/login", { replace: true });
-  }
-
+export function AdminLayout({
+  actions,
+  children,
+  isRefreshing = false,
+  onRefresh,
+  title,
+}: AdminLayoutProps) {
   return (
     <SidebarProvider>
       <AdminSidebar />
@@ -39,10 +40,23 @@ export function AdminLayout({ actions, children, title }: AdminLayoutProps) {
               </h1>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              {onRefresh ? (
+                <Button
+                  aria-label="Refresh page data"
+                  className="h-10 w-10 rounded-full px-0"
+                  disabled={isRefreshing}
+                  onClick={onRefresh}
+                  title="Refresh"
+                  type="button"
+                  variant="outline"
+                >
+                  <RefreshCw
+                    aria-hidden="true"
+                    className={cn("h-4 w-4", isRefreshing && "animate-spin")}
+                  />
+                </Button>
+              ) : null}
               {actions}
-              <Button onClick={handleLogout} type="button" variant="outline">
-                Logout
-              </Button>
             </div>
           </div>
 
