@@ -364,6 +364,7 @@ export function AdminUsersPage() {
           </Dialog>
         </>
       }
+      description="Manage user accounts, access levels, and account status."
       isRefreshing={usersQuery.isFetching || clinicsQuery.isFetching}
       onRefresh={() => {
         void usersQuery.refetch();

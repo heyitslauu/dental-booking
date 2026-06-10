@@ -292,6 +292,7 @@ export function AdminStaffPage() {
           Create staff
         </Button>
       }
+      description="Manage clinic staff profiles, roles, schedules, and assignments."
       isRefreshing={staffQuery.isFetching || clinicsQuery.isFetching}
       onRefresh={() => {
         void staffQuery.refetch();

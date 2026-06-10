@@ -351,6 +351,7 @@ export function AdminServicesPage() {
           Create service
         </Button>
       }
+      description="Configure dental services, pricing, duration, and availability."
       isRefreshing={servicesQuery.isFetching || clinicsQuery.isFetching}
       onRefresh={() => {
         void servicesQuery.refetch();

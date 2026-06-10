@@ -10,6 +10,7 @@ import { AdminSidebar } from "./admin-sidebar";
 type AdminLayoutProps = {
   actions?: ReactNode;
   children: ReactNode;
+  description?: string;
   isRefreshing?: boolean;
   onRefresh?: () => void;
   title: string;
@@ -18,6 +19,7 @@ type AdminLayoutProps = {
 export function AdminLayout({
   actions,
   children,
+  description,
   isRefreshing = false,
   onRefresh,
   title,
@@ -34,10 +36,15 @@ export function AdminLayout({
 
         <main className="flex min-w-0 flex-1 flex-col gap-6 bg-background p-4 text-foreground sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
+            <div className="grid gap-2">
               <h1 className="text-3xl font-semibold tracking-normal text-primary">
                 {title}
               </h1>
+              {description ? (
+                <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                  {description}
+                </p>
+              ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {onRefresh ? (

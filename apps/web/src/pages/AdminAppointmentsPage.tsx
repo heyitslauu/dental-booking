@@ -224,6 +224,7 @@ export function AdminAppointmentsPage() {
           Guest booking
         </Link>
       }
+      description="Review, filter, and manage patient appointment records."
       isRefreshing={appointmentsQuery.isFetching || clinicsQuery.isFetching}
       onRefresh={() => {
         void appointmentsQuery.refetch();
