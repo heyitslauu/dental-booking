@@ -1,4 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException
+} from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+import { AccessControlService } from "../access-control/access-control.service";
+import type { CurrentUser } from "../auth/current-user";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateClinicDto } from "./dto/create-clinic.dto";
 import { CreateClinicServiceDto } from "./dto/create-clinic-service.dto";
@@ -17,7 +25,10 @@ function getSlug(value: string) {
 
 @Injectable()
 export class ClinicsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly accessControlService: AccessControlService
+  ) {}
 
   findActiveClinics() {
     return this.prisma.clinic.findMany({
@@ -26,13 +37,20 @@ export class ClinicsService {
     });
   }
 
-  findAllClinics() {
+  async findAllClinics(currentUser: CurrentUser) {
+    const clinicIdFilter = await this.getClinicIdFilter(currentUser.userId);
+
     return this.prisma.clinic.findMany({
+      where: { id: clinicIdFilter },
       orderBy: { name: "asc" }
     });
   }
 
-  async createClinic(dto: CreateClinicDto) {
+  async createClinic(dto: CreateClinicDto, currentUser?: CurrentUser) {
+    if (currentUser) {
+      await this.ensureGlobalAdmin(currentUser.userId);
+    }
+
     const organization = await this.prisma.organization.findFirst({
       orderBy: { createdAt: "asc" }
     });
@@ -58,8 +76,16 @@ export class ClinicsService {
     });
   }
 
-  async updateClinic(clinicId: string, dto: UpdateClinicDto) {
+  async updateClinic(
+    clinicId: string,
+    dto: UpdateClinicDto,
+    currentUser?: CurrentUser
+  ) {
     await this.ensureClinicExists(clinicId);
+
+    if (currentUser) {
+      await this.ensureCanManageClinic(currentUser.userId, clinicId);
+    }
 
     const nextSlug = dto.slug === undefined ? undefined : getSlug(dto.slug);
 
@@ -105,9 +131,16 @@ export class ClinicsService {
     });
   }
 
-  findClinicServiceAssignments(clinicId?: string) {
+  async findClinicServiceAssignments(
+    clinicId?: string,
+    currentUser?: CurrentUser
+  ) {
+    const clinicIdFilter = currentUser
+      ? await this.getClinicIdFilter(currentUser.userId, clinicId)
+      : clinicId;
+
     return this.prisma.clinicService.findMany({
-      where: clinicId ? { clinicId } : undefined,
+      where: clinicIdFilter ? { clinicId: clinicIdFilter } : undefined,
       include: {
         clinic: true,
         service: true
@@ -116,8 +149,14 @@ export class ClinicsService {
     });
   }
 
-  async createClinicServiceAssignment(dto: CreateClinicServiceDto) {
+  async createClinicServiceAssignment(
+    dto: CreateClinicServiceDto,
+    currentUser?: CurrentUser
+  ) {
     await this.ensureClinicExists(dto.clinicId);
+    if (currentUser) {
+      await this.ensureCanManageClinic(currentUser.userId, dto.clinicId);
+    }
     await this.ensureServiceExists(dto.serviceId);
 
     return this.prisma.clinicService.create({
@@ -126,7 +165,16 @@ export class ClinicsService {
     });
   }
 
-  updateClinicServiceAssignment(id: string, dto: UpdateClinicServiceDto) {
+  async updateClinicServiceAssignment(
+    id: string,
+    dto: UpdateClinicServiceDto,
+    currentUser?: CurrentUser
+  ) {
+    const assignment = await this.ensureClinicServiceAssignmentExists(id);
+    if (currentUser) {
+      await this.ensureCanManageClinic(currentUser.userId, assignment.clinicId);
+    }
+
     return this.prisma.clinicService.update({
       where: { id },
       data: dto,
@@ -134,15 +182,24 @@ export class ClinicsService {
     });
   }
 
-  deleteClinicServiceAssignment(id: string) {
+  async deleteClinicServiceAssignment(id: string, currentUser?: CurrentUser) {
+    const assignment = await this.ensureClinicServiceAssignmentExists(id);
+    if (currentUser) {
+      await this.ensureCanManageClinic(currentUser.userId, assignment.clinicId);
+    }
+
     return this.prisma.clinicService.delete({
       where: { id }
     });
   }
 
-  findClinicStaffAssignments(clinicId?: string) {
+  async findClinicStaffAssignments(clinicId?: string, currentUser?: CurrentUser) {
+    const clinicIdFilter = currentUser
+      ? await this.getClinicIdFilter(currentUser.userId, clinicId)
+      : clinicId;
+
     return this.prisma.clinicStaff.findMany({
-      where: clinicId ? { clinicId } : undefined,
+      where: clinicIdFilter ? { clinicId: clinicIdFilter } : undefined,
       include: {
         clinic: true,
         staffProfile: true
@@ -151,8 +208,14 @@ export class ClinicsService {
     });
   }
 
-  async createClinicStaffAssignment(dto: CreateClinicStaffDto) {
+  async createClinicStaffAssignment(
+    dto: CreateClinicStaffDto,
+    currentUser?: CurrentUser
+  ) {
     await this.ensureClinicExists(dto.clinicId);
+    if (currentUser) {
+      await this.ensureCanManageClinic(currentUser.userId, dto.clinicId);
+    }
     await this.ensureStaffExists(dto.staffProfileId);
 
     return this.prisma.clinicStaff.create({
@@ -161,7 +224,16 @@ export class ClinicsService {
     });
   }
 
-  updateClinicStaffAssignment(id: string, dto: UpdateClinicStaffDto) {
+  async updateClinicStaffAssignment(
+    id: string,
+    dto: UpdateClinicStaffDto,
+    currentUser?: CurrentUser
+  ) {
+    const assignment = await this.ensureClinicStaffAssignmentExists(id);
+    if (currentUser) {
+      await this.ensureCanManageClinic(currentUser.userId, assignment.clinicId);
+    }
+
     return this.prisma.clinicStaff.update({
       where: { id },
       data: dto,
@@ -169,7 +241,12 @@ export class ClinicsService {
     });
   }
 
-  deleteClinicStaffAssignment(id: string) {
+  async deleteClinicStaffAssignment(id: string, currentUser?: CurrentUser) {
+    const assignment = await this.ensureClinicStaffAssignmentExists(id);
+    if (currentUser) {
+      await this.ensureCanManageClinic(currentUser.userId, assignment.clinicId);
+    }
+
     return this.prisma.clinicStaff.delete({
       where: { id }
     });
@@ -243,5 +320,75 @@ export class ClinicsService {
     if (!staff) {
       throw new NotFoundException("Staff profile not found.");
     }
+  }
+
+  private async getClinicIdFilter(
+    userId: string,
+    requestedClinicId?: string
+  ): Promise<string | Prisma.StringFilter | undefined> {
+    const context = await this.accessControlService.getUserAccessContext(userId);
+
+    if (context.isGlobalAdmin) {
+      return requestedClinicId;
+    }
+
+    if (context.accessibleClinicIds.length === 0) {
+      throw new ForbiddenException("You do not have access to any clinics.");
+    }
+
+    if (requestedClinicId) {
+      if (!context.accessibleClinicIds.includes(requestedClinicId)) {
+        throw new ForbiddenException("You cannot access this clinic.");
+      }
+
+      return requestedClinicId;
+    }
+
+    return { in: context.accessibleClinicIds };
+  }
+
+  private async ensureCanManageClinic(userId: string, clinicId: string) {
+    const canManageClinic = await this.accessControlService.canManageClinic(
+      userId,
+      clinicId
+    );
+
+    if (!canManageClinic) {
+      throw new ForbiddenException("You cannot manage this clinic.");
+    }
+  }
+
+  private async ensureGlobalAdmin(userId: string) {
+    const isGlobalAdmin = await this.accessControlService.isGlobalAdmin(userId);
+
+    if (!isGlobalAdmin) {
+      throw new ForbiddenException("Only global admins can create clinics.");
+    }
+  }
+
+  private async ensureClinicServiceAssignmentExists(id: string) {
+    const assignment = await this.prisma.clinicService.findUnique({
+      where: { id },
+      select: { clinicId: true }
+    });
+
+    if (!assignment) {
+      throw new NotFoundException("Clinic service assignment not found.");
+    }
+
+    return assignment;
+  }
+
+  private async ensureClinicStaffAssignmentExists(id: string) {
+    const assignment = await this.prisma.clinicStaff.findUnique({
+      where: { id },
+      select: { clinicId: true }
+    });
+
+    if (!assignment) {
+      throw new NotFoundException("Clinic staff assignment not found.");
+    }
+
+    return assignment;
   }
 }

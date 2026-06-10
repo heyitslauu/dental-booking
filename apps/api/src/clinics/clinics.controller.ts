@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import { AdminJwtGuard } from "../auth/admin-jwt.guard";
+import { CurrentUser, type CurrentUser as CurrentUserType } from "../auth/current-user";
 import { ClinicsService } from "./clinics.service";
 import { CreateClinicDto } from "./dto/create-clinic.dto";
 import { UpdateClinicDto } from "./dto/update-clinic.dto";
@@ -15,20 +16,24 @@ export class ClinicsController {
 
   @Get("admin")
   @UseGuards(AdminJwtGuard)
-  findAll() {
-    return this.clinicsService.findAllClinics();
+  findAll(@CurrentUser() currentUser: CurrentUserType) {
+    return this.clinicsService.findAllClinics(currentUser);
   }
 
   @Post("admin")
   @UseGuards(AdminJwtGuard)
-  create(@Body() dto: CreateClinicDto) {
-    return this.clinicsService.createClinic(dto);
+  create(@CurrentUser() currentUser: CurrentUserType, @Body() dto: CreateClinicDto) {
+    return this.clinicsService.createClinic(dto, currentUser);
   }
 
   @Patch("admin/:clinicId")
   @UseGuards(AdminJwtGuard)
-  update(@Param("clinicId") clinicId: string, @Body() dto: UpdateClinicDto) {
-    return this.clinicsService.updateClinic(clinicId, dto);
+  update(
+    @CurrentUser() currentUser: CurrentUserType,
+    @Param("clinicId") clinicId: string,
+    @Body() dto: UpdateClinicDto
+  ) {
+    return this.clinicsService.updateClinic(clinicId, dto, currentUser);
   }
 
   @Get(":clinicId/services")
