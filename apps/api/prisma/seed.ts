@@ -136,12 +136,14 @@ async function main() {
       prisma.user.create({
         data: {
           email: "dr.rivera@example.com",
+          passwordHash: await bcrypt.hash("Dentist123!", 12),
           role: UserRole.STAFF,
         },
       }),
       prisma.user.create({
         data: {
           email: "dr.chen@example.com",
+          passwordHash: await bcrypt.hash("Dentist123!", 12),
           role: UserRole.STAFF,
         },
       }),
