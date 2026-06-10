@@ -346,14 +346,9 @@ export function AdminServicesPage() {
   return (
     <AdminLayout
       actions={
-        <Button
-          aria-label="Create service"
-          className="h-10 w-10 p-0"
-          onClick={openCreateServiceDialog}
-          title="Create service"
-          type="button"
-        >
-          <Plus aria-hidden="true" className="h-4 w-4" />
+        <Button onClick={openCreateServiceDialog} type="button">
+          <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+          Create service
         </Button>
       }
       title="Services"

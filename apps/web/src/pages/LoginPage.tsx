@@ -2,6 +2,8 @@ import { FormEvent, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
   CalendarCheck,
+  Eye,
+  EyeOff,
   Facebook,
   Instagram,
   Mail,
@@ -60,6 +62,7 @@ export function LoginPage() {
   const state = location.state as LoginLocationState | null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const loginMutation = useMutation({
     mutationFn: loginAdmin,
@@ -185,13 +188,30 @@ export function LoginPage() {
                   </Label>
                   <Label className="grid gap-2">
                     <span>Password</span>
-                    <Input
-                      autoComplete="current-password"
-                      onChange={(event) => setPassword(event.target.value)}
-                      placeholder="Enter your password"
-                      type="password"
-                      value={password}
-                    />
+                    <div className="flex h-10 items-center rounded-md border border-border bg-background transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30">
+                      <Input
+                        autoComplete="current-password"
+                        className="h-full flex-1 border-0 bg-transparent pr-1 focus:border-transparent focus:ring-0"
+                        onChange={(event) => setPassword(event.target.value)}
+                        placeholder="Enter your password"
+                        type={isPasswordVisible ? "text" : "password"}
+                        value={password}
+                      />
+                      <button
+                        aria-label={
+                          isPasswordVisible ? "Hide password" : "Show password"
+                        }
+                        className="mr-2 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => setIsPasswordVisible((value) => !value)}
+                        type="button"
+                      >
+                        {isPasswordVisible ? (
+                          <EyeOff className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Eye className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </button>
+                    </div>
                   </Label>
 
                   {loginMutation.error ? (

@@ -287,14 +287,9 @@ export function AdminStaffPage() {
   return (
     <AdminLayout
       actions={
-        <Button
-          aria-label="Create staff profile"
-          className="h-10 w-10 p-0"
-          onClick={openCreateStaffDialog}
-          title="Create staff profile"
-          type="button"
-        >
-          <Plus aria-hidden="true" className="h-4 w-4" />
+        <Button onClick={openCreateStaffDialog} type="button">
+          <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+          Create staff
         </Button>
       }
       title="Staff"

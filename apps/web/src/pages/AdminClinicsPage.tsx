@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AdminLayout } from "../components/admin/AdminLayout";
 import { Badge } from "../components/ui/badge";
@@ -178,6 +179,7 @@ export function AdminClinicsPage() {
     <AdminLayout
       actions={
         <Button onClick={openCreateDialog} type="button">
+          <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
           New branch
         </Button>
       }

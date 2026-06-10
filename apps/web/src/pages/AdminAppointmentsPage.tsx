@@ -4,7 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Eye } from "lucide-react";
+import { CalendarPlus, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AdminLayout } from "../components/admin/AdminLayout";
 import { toast } from "sonner";
@@ -216,9 +216,10 @@ export function AdminAppointmentsPage() {
     <AdminLayout
       actions={
         <Link
-          className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-primary transition hover:bg-surface"
+          className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           to="/book"
         >
+          <CalendarPlus aria-hidden="true" className="mr-2 h-4 w-4" />
           Guest booking
         </Link>
       }

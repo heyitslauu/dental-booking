@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Eye, EyeOff, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AdminLayout } from "../components/admin/AdminLayout";
 import { Badge } from "../components/ui/badge";
@@ -85,6 +86,7 @@ export function AdminUsersPage() {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [accessClinicId, setAccessClinicId] = useState("");
   const [accessRole, setAccessRole] = useState<ClinicAccessRole>("CLINIC_ADMIN");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const usersQuery = useQuery({
     queryKey: ["admin", "users"],
@@ -192,43 +194,63 @@ export function AdminUsersPage() {
   return (
     <AdminLayout
       actions={
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <>
           <Button onClick={() => setIsCreateOpen(true)} type="button">
-            Create user
+            <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+            Add user
           </Button>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create user</DialogTitle>
-              <DialogDescription>
-                Add a login user and optionally assign initial clinic access.
-              </DialogDescription>
-            </DialogHeader>
-            <form className="grid gap-4" onSubmit={handleCreateUser}>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Label className="grid gap-2">
-                  <span>Email</span>
-                  <Input
-                    onChange={(event) =>
-                      setCreateForm((form) => ({ ...form, email: event.target.value }))
-                    }
-                    type="email"
-                    value={createForm.email}
-                  />
-                </Label>
-                <Label className="grid gap-2">
-                  <span>Temporary password</span>
-                  <Input
-                    onChange={(event) =>
-                      setCreateForm((form) => ({
-                        ...form,
-                        password: event.target.value,
-                      }))
-                    }
-                    type="password"
-                    value={createForm.password}
-                  />
-                </Label>
-              </div>
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Add user</DialogTitle>
+                <DialogDescription>
+                  Create a login user. Staff users can also get a linked staff
+                  profile and clinic access.
+                </DialogDescription>
+              </DialogHeader>
+              <form className="grid gap-4" onSubmit={handleCreateUser}>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Label className="grid gap-2">
+                    <span>Email</span>
+                    <Input
+                      onChange={(event) =>
+                        setCreateForm((form) => ({ ...form, email: event.target.value }))
+                      }
+                      type="email"
+                      value={createForm.email}
+                    />
+                  </Label>
+                  <Label className="grid gap-2">
+                    <span>Temporary password</span>
+                    <div className="flex h-10 items-center rounded-md border border-border bg-background transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30">
+                      <Input
+                        className="h-full flex-1 border-0 bg-transparent pr-1 focus:border-transparent focus:ring-0"
+                        onChange={(event) =>
+                          setCreateForm((form) => ({
+                            ...form,
+                            password: event.target.value,
+                          }))
+                        }
+                        type={isPasswordVisible ? "text" : "password"}
+                        value={createForm.password}
+                      />
+                      <button
+                        aria-label={
+                          isPasswordVisible ? "Hide password" : "Show password"
+                        }
+                        className="mr-2 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => setIsPasswordVisible((value) => !value)}
+                        type="button"
+                      >
+                        {isPasswordVisible ? (
+                          <EyeOff className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Eye className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </button>
+                    </div>
+                  </Label>
+                </div>
 
               <Label className="grid gap-2">
                 <span>Global role</span>
@@ -325,12 +347,22 @@ export function AdminUsersPage() {
                 </Label>
               </div>
 
-              <Button disabled={createUserMutation.isPending} type="submit">
-                {createUserMutation.isPending ? "Creating..." : "Create user"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <div className="flex flex-wrap justify-end gap-3">
+                  <Button
+                    onClick={() => setIsCreateOpen(false)}
+                    type="button"
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                  <Button disabled={createUserMutation.isPending} type="submit">
+                    {createUserMutation.isPending ? "Creating..." : "Add user"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </>
       }
       title="Users"
     >
@@ -339,7 +371,11 @@ export function AdminUsersPage() {
           <CardHeader>
             <CardTitle>Admin users</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="grid gap-4">
+            <p className="text-sm leading-6 text-muted-foreground">
+              Staff profiles describe the dental team. Staff users are login
+              accounts linked to those profiles when they need dashboard access.
+            </p>
             {usersQuery.error ? (
               <p className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                 {usersQuery.error instanceof Error
