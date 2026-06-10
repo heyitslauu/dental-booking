@@ -19,15 +19,24 @@ export class ServicesService {
     });
   }
 
-  create(dto: CreateServiceDto) {
+  async create(dto: CreateServiceDto) {
     const name = dto.name.trim();
 
     if (!name) {
       throw new BadRequestException("Service name is required.");
     }
 
+    const organization = await this.prisma.organization.findFirst({
+      orderBy: { createdAt: "asc" }
+    });
+
+    if (!organization) {
+      throw new BadRequestException("Create an organization before adding services.");
+    }
+
     return this.prisma.service.create({
       data: {
+        organizationId: organization.id,
         name,
         description: dto.description?.trim() || null,
         isActive: dto.isActive

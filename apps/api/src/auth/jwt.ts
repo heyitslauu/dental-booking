@@ -88,7 +88,12 @@ export function verifyAccessToken(token: string): AuthTokenPayload {
       base64UrlDecode(encodedPayload)
     ) as AuthTokenPayload;
 
-    if (!payload.sub || payload.role !== UserRole.ADMIN) {
+    const hasAdminRole =
+      payload.role === UserRole.SUPER_ADMIN ||
+      payload.role === UserRole.ORG_ADMIN ||
+      payload.role === UserRole.STAFF;
+
+    if (!payload.sub || !hasAdminRole) {
       throw new UnauthorizedException("Admin access is required.");
     }
 

@@ -1,10 +1,11 @@
-import { PrismaClient, UserRole } from "@prisma/client";
+import { ClinicAccessRole, PrismaClient, UserRole } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
   await prisma.appointment.deleteMany();
+  await prisma.userClinicAccess.deleteMany();
   await prisma.clinicService.deleteMany();
   await prisma.clinicStaff.deleteMany();
   await prisma.patientProfile.deleteMany();
@@ -20,14 +21,25 @@ async function main() {
     },
   });
 
-  await prisma.user.create({
+  const superAdmin = await prisma.user.create({
     data: {
       email: process.env.SEED_ADMIN_EMAIL || "admin@example.com",
       passwordHash: await bcrypt.hash(
         process.env.SEED_ADMIN_PASSWORD || "Admin123!",
         12,
       ),
-      role: UserRole.ADMIN,
+      role: UserRole.SUPER_ADMIN,
+    },
+  });
+
+  const orgAdmin = await prisma.user.create({
+    data: {
+      email: process.env.SEED_ORG_ADMIN_EMAIL || "org.admin@example.com",
+      passwordHash: await bcrypt.hash(
+        process.env.SEED_ORG_ADMIN_PASSWORD || "OrgAdmin123!",
+        12,
+      ),
+      role: UserRole.ORG_ADMIN,
     },
   });
 
@@ -55,18 +67,21 @@ async function main() {
   const [cleaning, whitening, extraction] = await Promise.all([
     prisma.service.create({
       data: {
+        organizationId: organization.id,
         name: "Dental Cleaning",
         description: "Routine cleaning and oral hygiene check.",
       },
     }),
     prisma.service.create({
       data: {
+        organizationId: organization.id,
         name: "Teeth Whitening",
         description: "In-clinic whitening treatment.",
       },
     }),
     prisma.service.create({
       data: {
+        organizationId: organization.id,
         name: "Tooth Extraction",
         description: "Simple extraction consultation and procedure.",
       },
@@ -102,20 +117,85 @@ async function main() {
     ],
   });
 
-  const [drRiveraUser, drChenUser] = await Promise.all([
-    prisma.user.create({
-      data: {
-        email: "dr.rivera@example.com",
-        role: UserRole.STAFF,
+  const [downtownClinicAdmin, uptownClinicAdmin, drRiveraUser, drChenUser] =
+    await Promise.all([
+      prisma.user.create({
+        data: {
+          email: "downtown@example.com",
+          passwordHash: await bcrypt.hash("Admin123!", 12),
+          role: UserRole.STAFF,
+        },
+      }),
+      prisma.user.create({
+        data: {
+          email: "uptown@example.com",
+          passwordHash: await bcrypt.hash("Admin123!", 12),
+          role: UserRole.STAFF,
+        },
+      }),
+      prisma.user.create({
+        data: {
+          email: "dr.rivera@example.com",
+          role: UserRole.STAFF,
+        },
+      }),
+      prisma.user.create({
+        data: {
+          email: "dr.chen@example.com",
+          role: UserRole.STAFF,
+        },
+      }),
+    ]);
+
+  await prisma.userClinicAccess.createMany({
+    data: [
+      {
+        userId: superAdmin.id,
+        clinicId: downtown.id,
+        role: ClinicAccessRole.CLINIC_ADMIN,
       },
-    }),
-    prisma.user.create({
-      data: {
-        email: "dr.chen@example.com",
-        role: UserRole.STAFF,
+      {
+        userId: superAdmin.id,
+        clinicId: uptown.id,
+        role: ClinicAccessRole.CLINIC_ADMIN,
       },
-    }),
-  ]);
+      {
+        userId: orgAdmin.id,
+        clinicId: downtown.id,
+        role: ClinicAccessRole.CLINIC_ADMIN,
+      },
+      {
+        userId: orgAdmin.id,
+        clinicId: uptown.id,
+        role: ClinicAccessRole.CLINIC_ADMIN,
+      },
+      {
+        userId: downtownClinicAdmin.id,
+        clinicId: downtown.id,
+        role: ClinicAccessRole.CLINIC_ADMIN,
+      },
+      {
+        userId: uptownClinicAdmin.id,
+        clinicId: uptown.id,
+        role: ClinicAccessRole.CLINIC_ADMIN,
+      },
+      {
+        userId: drRiveraUser.id,
+        clinicId: downtown.id,
+        role: ClinicAccessRole.DENTIST,
+      },
+      {
+        userId: drRiveraUser.id,
+        clinicId: uptown.id,
+        role: ClinicAccessRole.DENTIST,
+      },
+      {
+        userId: drChenUser.id,
+        clinicId: downtown.id,
+        role: ClinicAccessRole.DENTIST,
+      },
+    ],
+  });
 
   const [drRivera, drChen] = await Promise.all([
     prisma.staffProfile.create({

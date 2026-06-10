@@ -11,16 +11,27 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
-      where: { email: dto.email.trim().toLowerCase() }
+      where: { email: dto.email.trim().toLowerCase() },
+      include: {
+        clinicAccess: {
+          where: { isActive: true },
+          take: 1,
+        },
+      },
     });
 
-    if (!user || user.role !== UserRole.ADMIN || !user.passwordHash) {
+    const canUseAdminDashboard =
+      user?.role === UserRole.SUPER_ADMIN ||
+      user?.role === UserRole.ORG_ADMIN ||
+      (user?.role === UserRole.STAFF && user.clinicAccess.length > 0);
+
+    if (!user || !canUseAdminDashboard || !user.passwordHash) {
       throw new UnauthorizedException("Invalid email or password.");
     }
 
     const isPasswordValid = await bcrypt.compare(
       dto.password,
-      user.passwordHash
+      user.passwordHash,
     );
 
     if (!isPasswordValid) {
@@ -31,13 +42,13 @@ export class AuthService {
       accessToken: signAccessToken({
         email: user.email,
         role: user.role,
-        sub: user.id
+        sub: user.id,
       }),
       user: {
         email: user.email,
         id: user.id,
-        role: user.role
-      }
+        role: user.role,
+      },
     };
   }
 }
