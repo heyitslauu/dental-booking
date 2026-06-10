@@ -84,7 +84,11 @@ export class ClinicsService {
     await this.ensureClinicExists(clinicId);
 
     if (currentUser) {
-      await this.ensureCanManageClinic(currentUser.userId, clinicId);
+      await this.ensureCanManageClinic(
+        currentUser.userId,
+        clinicId,
+        "You cannot manage this clinic."
+      );
     }
 
     const nextSlug = dto.slug === undefined ? undefined : getSlug(dto.slug);
@@ -155,7 +159,11 @@ export class ClinicsService {
   ) {
     await this.ensureClinicExists(dto.clinicId);
     if (currentUser) {
-      await this.ensureCanManageClinic(currentUser.userId, dto.clinicId);
+      await this.ensureCanManageClinic(
+        currentUser.userId,
+        dto.clinicId,
+        "You cannot manage service offerings for this clinic."
+      );
     }
     await this.ensureServiceExists(dto.serviceId);
 
@@ -172,7 +180,11 @@ export class ClinicsService {
   ) {
     const assignment = await this.ensureClinicServiceAssignmentExists(id);
     if (currentUser) {
-      await this.ensureCanManageClinic(currentUser.userId, assignment.clinicId);
+      await this.ensureCanManageClinic(
+        currentUser.userId,
+        assignment.clinicId,
+        "You cannot manage service offerings for this clinic."
+      );
     }
 
     return this.prisma.clinicService.update({
@@ -185,7 +197,11 @@ export class ClinicsService {
   async deleteClinicServiceAssignment(id: string, currentUser?: CurrentUser) {
     const assignment = await this.ensureClinicServiceAssignmentExists(id);
     if (currentUser) {
-      await this.ensureCanManageClinic(currentUser.userId, assignment.clinicId);
+      await this.ensureCanManageClinic(
+        currentUser.userId,
+        assignment.clinicId,
+        "You cannot manage service offerings for this clinic."
+      );
     }
 
     return this.prisma.clinicService.delete({
@@ -214,7 +230,11 @@ export class ClinicsService {
   ) {
     await this.ensureClinicExists(dto.clinicId);
     if (currentUser) {
-      await this.ensureCanManageClinic(currentUser.userId, dto.clinicId);
+      await this.ensureCanManageClinic(
+        currentUser.userId,
+        dto.clinicId,
+        "You cannot manage staff assignments for this clinic."
+      );
     }
     await this.ensureStaffExists(dto.staffProfileId);
 
@@ -231,7 +251,11 @@ export class ClinicsService {
   ) {
     const assignment = await this.ensureClinicStaffAssignmentExists(id);
     if (currentUser) {
-      await this.ensureCanManageClinic(currentUser.userId, assignment.clinicId);
+      await this.ensureCanManageClinic(
+        currentUser.userId,
+        assignment.clinicId,
+        "You cannot manage staff assignments for this clinic."
+      );
     }
 
     return this.prisma.clinicStaff.update({
@@ -244,7 +268,11 @@ export class ClinicsService {
   async deleteClinicStaffAssignment(id: string, currentUser?: CurrentUser) {
     const assignment = await this.ensureClinicStaffAssignmentExists(id);
     if (currentUser) {
-      await this.ensureCanManageClinic(currentUser.userId, assignment.clinicId);
+      await this.ensureCanManageClinic(
+        currentUser.userId,
+        assignment.clinicId,
+        "You cannot manage staff assignments for this clinic."
+      );
     }
 
     return this.prisma.clinicStaff.delete({
@@ -347,14 +375,18 @@ export class ClinicsService {
     return { in: context.accessibleClinicIds };
   }
 
-  private async ensureCanManageClinic(userId: string, clinicId: string) {
+  private async ensureCanManageClinic(
+    userId: string,
+    clinicId: string,
+    message: string
+  ) {
     const canManageClinic = await this.accessControlService.canManageClinic(
       userId,
       clinicId
     );
 
     if (!canManageClinic) {
-      throw new ForbiddenException("You cannot manage this clinic.");
+      throw new ForbiddenException(message);
     }
   }
 
