@@ -1,14 +1,28 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException
+} from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+import { AccessControlService } from "../access-control/access-control.service";
+import type { CurrentUser } from "../auth/current-user";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateServiceDto } from "./dto/create-service.dto";
 import { UpdateServiceDto } from "./dto/update-service.dto";
 
 @Injectable()
 export class ServicesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly accessControlService: AccessControlService
+  ) {}
 
-  findAll() {
+  async findAll(currentUser: CurrentUser) {
+    const serviceWhere = await this.getServiceListWhere(currentUser.userId);
+
     return this.prisma.service.findMany({
+      where: serviceWhere,
       include: {
         clinicServices: {
           include: { clinic: true },
@@ -19,7 +33,11 @@ export class ServicesService {
     });
   }
 
-  async create(dto: CreateServiceDto) {
+  async create(dto: CreateServiceDto, currentUser?: CurrentUser) {
+    if (currentUser) {
+      await this.ensureGlobalAdmin(currentUser.userId);
+    }
+
     const name = dto.name.trim();
 
     if (!name) {
@@ -50,7 +68,15 @@ export class ServicesService {
     });
   }
 
-  async update(serviceId: string, dto: UpdateServiceDto) {
+  async update(
+    serviceId: string,
+    dto: UpdateServiceDto,
+    currentUser?: CurrentUser
+  ) {
+    if (currentUser) {
+      await this.ensureGlobalAdmin(currentUser.userId);
+    }
+
     await this.ensureServiceExists(serviceId);
 
     const name = dto.name === undefined ? undefined : dto.name.trim();
@@ -83,6 +109,36 @@ export class ServicesService {
 
     if (!service) {
       throw new NotFoundException("Service not found.");
+    }
+  }
+
+  private async getServiceListWhere(
+    userId: string
+  ): Promise<Prisma.ServiceWhereInput | undefined> {
+    const context = await this.accessControlService.getUserAccessContext(userId);
+
+    if (context.isGlobalAdmin) {
+      return undefined;
+    }
+
+    if (context.accessibleClinicIds.length === 0) {
+      throw new ForbiddenException("You do not have access to any clinics.");
+    }
+
+    return {
+      clinicServices: {
+        some: {
+          clinicId: { in: context.accessibleClinicIds }
+        }
+      }
+    };
+  }
+
+  private async ensureGlobalAdmin(userId: string) {
+    const isGlobalAdmin = await this.accessControlService.isGlobalAdmin(userId);
+
+    if (!isGlobalAdmin) {
+      throw new ForbiddenException("Only global admins can manage service definitions.");
     }
   }
 }
