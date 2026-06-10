@@ -6,7 +6,7 @@ export function ProtectedAdminRoute({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   if (!isAdminAuthenticated()) {
-    return <Navigate replace state={{ from: location.pathname }} to="/admin/login" />;
+    return <Navigate replace state={{ from: location.pathname }} to="/login" />;
   }
 
   return children;

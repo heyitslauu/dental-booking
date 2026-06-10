@@ -8,6 +8,7 @@ import { AdminStaffPage } from "../pages/AdminStaffPage";
 import { BookingConfirmationPage } from "../pages/BookingConfirmationPage";
 import { BookingPage } from "../pages/BookingPage";
 import { HomePage } from "../pages/HomePage";
+import { LoginPage } from "../pages/LoginPage";
 
 function NotFoundPage() {
   return (
@@ -35,6 +36,7 @@ export function AppRouter() {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route element={<HomePage />} path="/" />
+        <Route element={<LoginPage />} path="/login" />
         <Route element={<AdminLoginPage />} path="/admin/login" />
         <Route
           element={

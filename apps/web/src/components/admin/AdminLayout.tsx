@@ -1,19 +1,15 @@
 import type { ReactNode } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { clearAdminToken } from "../../features/admin/auth";
-import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
-
-const adminNavItems = [
-  {
-    activePaths: ["/admin/appointment", "/admin/appointments"],
-    label: "Appointments",
-    to: "/admin/appointments",
-  },
-  { label: "Clinics", to: "/admin/clinics" },
-  { label: "Services", to: "/admin/services" },
-  { label: "Staff", to: "/admin/staff" },
-];
+import { Separator } from "../ui/separator";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "../ui/sidebar";
+import { AdminBreadcrumb } from "./admin-breadcrumb";
+import { AdminSidebar } from "./admin-sidebar";
 
 type AdminLayoutProps = {
   actions?: ReactNode;
@@ -22,18 +18,27 @@ type AdminLayoutProps = {
 };
 
 export function AdminLayout({ actions, children, title }: AdminLayoutProps) {
-  const location = useLocation();
   const navigate = useNavigate();
 
   function handleLogout() {
     clearAdminToken();
-    navigate("/admin/login", { replace: true });
+    navigate("/login", { replace: true });
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-8">
-        <header className="grid gap-5">
+    <SidebarProvider>
+      <AdminSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator
+            className="mr-2 h-4"
+            orientation="vertical"
+          />
+          <AdminBreadcrumb title={title} />
+        </header>
+
+        <main className="flex min-w-0 flex-1 flex-col gap-6 bg-background p-4 text-foreground sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-accent-foreground">
@@ -51,35 +56,9 @@ export function AdminLayout({ actions, children, title }: AdminLayoutProps) {
             </div>
           </div>
 
-          <nav
-            aria-label="Admin navigation"
-            className="flex flex-wrap gap-2 border-b border-border pb-3"
-          >
-            {adminNavItems.map((item) => {
-              const isActive =
-                item.to === location.pathname ||
-                item.activePaths?.includes(location.pathname);
-
-              return (
-                <Link
-                  className={cn(
-                    "inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-surface hover:text-primary",
-                  )}
-                  key={item.to}
-                  to={item.to}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </header>
-
-        {children}
-      </div>
-    </main>
+          <div className="min-w-0">{children}</div>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

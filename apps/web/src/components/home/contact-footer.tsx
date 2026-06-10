@@ -9,7 +9,7 @@ const footerGroups = [
       { label: "Services", href: "#services" },
       { label: "About Us", href: "#about" },
       { label: "Book an Appointment", href: "/book" },
-      { label: "Login", href: "/admin/login" },
+      { label: "Login", href: "/login" },
     ],
   },
   {

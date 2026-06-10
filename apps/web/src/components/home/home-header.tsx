@@ -6,7 +6,7 @@ const navLinks = [
   { label: "Services", href: "#services" },
   { label: "About Us", href: "#about" },
   { label: "Book an Appointment", href: "/book", cta: true },
-  { label: "Login", href: "/admin/login" },
+  { label: "Login", href: "/login" },
 ];
 
 const linkClass = (isCta?: boolean) => {

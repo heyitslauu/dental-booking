@@ -23,8 +23,8 @@ adminApi.interceptors.response.use(
     if (error instanceof AxiosError && error.response?.status === 401) {
       clearAdminToken();
 
-      if (!window.location.pathname.endsWith("/admin/login")) {
-        window.location.assign("/admin/login");
+      if (!window.location.pathname.endsWith("/login")) {
+        window.location.assign("/login");
       }
     }
 
