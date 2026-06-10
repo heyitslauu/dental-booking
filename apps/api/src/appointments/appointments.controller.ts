@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { AdminJwtGuard } from "../auth/admin-jwt.guard";
+import { CurrentUser, type CurrentUser as CurrentUserType } from "../auth/current-user";
 import { AppointmentsService } from "./appointments.service";
 import { CreateAppointmentDto } from "./dto/create-appointment.dto";
 import { ListAppointmentsDto } from "./dto/list-appointments.dto";
@@ -11,8 +12,11 @@ export class AppointmentsController {
 
   @Get()
   @UseGuards(AdminJwtGuard)
-  findMany(@Query() query: ListAppointmentsDto) {
-    return this.appointmentsService.findMany(query);
+  findMany(
+    @CurrentUser() currentUser: CurrentUserType,
+    @Query() query: ListAppointmentsDto
+  ) {
+    return this.appointmentsService.findMany(query, currentUser);
   }
 
   @Post()
@@ -28,9 +32,10 @@ export class AppointmentsController {
   @Patch(":id/status")
   @UseGuards(AdminJwtGuard)
   updateStatus(
+    @CurrentUser() currentUser: CurrentUserType,
     @Param("id") id: string,
     @Body() dto: UpdateAppointmentStatusDto
   ) {
-    return this.appointmentsService.updateStatus(id, dto.status);
+    return this.appointmentsService.updateStatus(id, dto.status, currentUser);
   }
 }

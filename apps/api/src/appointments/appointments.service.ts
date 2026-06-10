@@ -1,5 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException
+} from "@nestjs/common";
 import { AppointmentStatus, Prisma } from "@prisma/client";
+import { AccessControlService } from "../access-control/access-control.service";
+import type { CurrentUser } from "../auth/current-user";
 import { ClinicsService } from "../clinics/clinics.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateAppointmentDto } from "./dto/create-appointment.dto";
@@ -27,11 +34,16 @@ function generateReferenceNumber() {
 export class AppointmentsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly clinicsService: ClinicsService
+    private readonly clinicsService: ClinicsService,
+    private readonly accessControlService: AccessControlService
   ) {}
 
-  async findMany(query: ListAppointmentsDto) {
+  async findMany(query: ListAppointmentsDto, currentUser: CurrentUser) {
     const startAt: Record<string, Date> = {};
+    const clinicIdFilter = await this.getAppointmentClinicFilter(
+      currentUser.userId,
+      query.clinicId
+    );
 
     if (query.from) {
       startAt.gte = new Date(query.from);
@@ -43,7 +55,7 @@ export class AppointmentsService {
 
     return this.prisma.appointment.findMany({
       where: {
-        clinicId: query.clinicId,
+        clinicId: clinicIdFilter,
         status: query.status,
         startAt: Object.keys(startAt).length ? startAt : undefined
       },
@@ -136,11 +148,58 @@ export class AppointmentsService {
     throw new BadRequestException("Unable to generate appointment reference.");
   }
 
-  updateStatus(id: string, status: AppointmentStatus) {
+  async updateStatus(
+    id: string,
+    status: AppointmentStatus,
+    currentUser: CurrentUser
+  ) {
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id },
+      select: { clinicId: true }
+    });
+
+    if (!appointment) {
+      throw new NotFoundException("Appointment not found.");
+    }
+
+    const canManageClinic = await this.accessControlService.canManageClinic(
+      currentUser.userId,
+      appointment.clinicId
+    );
+
+    if (!canManageClinic) {
+      throw new ForbiddenException("You cannot manage appointments for this clinic.");
+    }
+
     return this.prisma.appointment.update({
       where: { id },
       data: { status },
       include: appointmentInclude
     });
+  }
+
+  private async getAppointmentClinicFilter(
+    userId: string,
+    requestedClinicId?: string
+  ): Promise<string | Prisma.StringFilter | undefined> {
+    const context = await this.accessControlService.getUserAccessContext(userId);
+
+    if (context.isGlobalAdmin) {
+      return requestedClinicId;
+    }
+
+    if (context.accessibleClinicIds.length === 0) {
+      throw new ForbiddenException("You do not have access to any clinics.");
+    }
+
+    if (requestedClinicId) {
+      if (!context.accessibleClinicIds.includes(requestedClinicId)) {
+        throw new ForbiddenException("You cannot access appointments for this clinic.");
+      }
+
+      return requestedClinicId;
+    }
+
+    return { in: context.accessibleClinicIds };
   }
 }
