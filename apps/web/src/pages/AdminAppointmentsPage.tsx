@@ -1,16 +1,17 @@
 import { useMemo, useState } from "react";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarPlus, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AdminLayout } from "../components/admin/AdminLayout";
 import { toast } from "sonner";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import {
   Dialog,
   DialogClose,
@@ -230,198 +231,193 @@ export function AdminAppointmentsPage() {
       }}
       title="Appointments"
     >
+      <Card>
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-5">
+            <Label className="grid gap-2">
+              <span>Clinic</span>
+              <Select
+                disabled={clinicsQuery.isLoading}
+                onChange={(event) =>
+                  updateFilter("clinicId", event.target.value)
+                }
+                value={filters.clinicId}
+              >
+                <option value="">All clinics</option>
+                {(clinicsQuery.data ?? []).map((clinic) => (
+                  <option key={clinic.id} value={clinic.id}>
+                    {clinic.name}
+                  </option>
+                ))}
+              </Select>
+              {clinicsQuery.error ? (
+                <span className="text-xs font-medium text-destructive">
+                  Unable to load clinics.
+                </span>
+              ) : null}
+            </Label>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-5">
-              <Label className="grid gap-2">
-                <span>Clinic</span>
-                <Select
-                  disabled={clinicsQuery.isLoading}
-                  onChange={(event) =>
-                    updateFilter("clinicId", event.target.value)
-                  }
-                  value={filters.clinicId}
-                >
-                  <option value="">All clinics</option>
-                  {(clinicsQuery.data ?? []).map((clinic) => (
-                    <option key={clinic.id} value={clinic.id}>
-                      {clinic.name}
-                    </option>
-                  ))}
-                </Select>
-                {clinicsQuery.error ? (
-                  <span className="text-xs font-medium text-destructive">
-                    Unable to load clinics.
-                  </span>
-                ) : null}
-              </Label>
+            <Label className="grid gap-2">
+              <span>Status</span>
+              <Select
+                onChange={(event) => updateFilter("status", event.target.value)}
+                value={filters.status}
+              >
+                <option value="">All statuses</option>
+                {appointmentStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {statusLabels[status]}
+                  </option>
+                ))}
+              </Select>
+            </Label>
 
-              <Label className="grid gap-2">
-                <span>Status</span>
-                <Select
-                  onChange={(event) => updateFilter("status", event.target.value)}
-                  value={filters.status}
-                >
-                  <option value="">All statuses</option>
-                  {appointmentStatuses.map((status) => (
-                    <option key={status} value={status}>
-                      {statusLabels[status]}
-                    </option>
-                  ))}
-                </Select>
-              </Label>
+            <Label className="grid gap-2">
+              <span>From</span>
+              <Input
+                onChange={(event) => updateFilter("from", event.target.value)}
+                type="date"
+                value={filters.from}
+              />
+            </Label>
 
-              <Label className="grid gap-2">
-                <span>From</span>
-                <Input
-                  onChange={(event) => updateFilter("from", event.target.value)}
-                  type="date"
-                  value={filters.from}
-                />
-              </Label>
+            <Label className="grid gap-2">
+              <span>To</span>
+              <Input
+                min={filters.from || undefined}
+                onChange={(event) => updateFilter("to", event.target.value)}
+                type="date"
+                value={filters.to}
+              />
+            </Label>
 
-              <Label className="grid gap-2">
-                <span>To</span>
-                <Input
-                  min={filters.from || undefined}
-                  onChange={(event) => updateFilter("to", event.target.value)}
-                  type="date"
-                  value={filters.to}
-                />
-              </Label>
-
-              <div className="flex items-end">
-                <Button
-                  disabled={!hasActiveFilters}
-                  onClick={clearFilters}
-                  type="button"
-                  variant="outline"
-                >
-                  Clear filters
-                </Button>
-              </div>
+            <div className="flex items-end">
+              <Button
+                disabled={!hasActiveFilters}
+                onClick={clearFilters}
+                type="button"
+                variant="outline"
+              >
+                Clear filters
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
-            <CardTitle>Appointment list</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {appointmentsQuery.isFetching
-                ? "Refreshing..."
-                : `${appointments.length} appointments`}
-            </p>
-          </CardHeader>
-          <CardContent>
-            {appointmentsQuery.error ? (
-              <div className="grid gap-3 rounded-md border border-destructive/30 bg-destructive/10 p-4">
-                <p className="text-sm font-medium text-destructive">
-                  {appointmentsQuery.error instanceof Error
-                    ? appointmentsQuery.error.message
-                    : "Unable to load appointments."}
-                </p>
-                <Button
-                  className="w-fit"
-                  onClick={() => void appointmentsQuery.refetch()}
-                  type="button"
-                  variant="outline"
-                >
-                  Retry
-                </Button>
-              </div>
-            ) : null}
+      <Card className="mt-4">
+        <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
+          <CardTitle>Appointment list</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {appointmentsQuery.isFetching
+              ? "Refreshing..."
+              : `${appointments.length} appointments`}
+          </p>
+        </CardHeader>
+        <CardContent>
+          {appointmentsQuery.error ? (
+            <div className="grid gap-3 rounded-md border border-destructive/30 bg-destructive/10 p-4">
+              <p className="text-sm font-medium text-destructive">
+                {appointmentsQuery.error instanceof Error
+                  ? appointmentsQuery.error.message
+                  : "Unable to load appointments."}
+              </p>
+              <Button
+                className="w-fit"
+                onClick={() => void appointmentsQuery.refetch()}
+                type="button"
+                variant="outline"
+              >
+                Retry
+              </Button>
+            </div>
+          ) : null}
 
-            {!appointmentsQuery.error ? (
-              <Table>
-                <TableHeader>
+          {!appointmentsQuery.error ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Reference</TableHead>
+                  <TableHead>Patient</TableHead>
+                  <TableHead className="hidden md:table-cell">Clinic</TableHead>
+                  <TableHead>Service details</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {appointmentsQuery.isLoading ? (
                   <TableRow>
-                    <TableHead>Reference</TableHead>
-                    <TableHead>Patient</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Clinic
-                    </TableHead>
-                    <TableHead>Service details</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableCell
+                      className="py-8 text-center text-muted-foreground"
+                      colSpan={6}
+                    >
+                      Loading appointments...
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {appointmentsQuery.isLoading ? (
-                    <TableRow>
-                      <TableCell
-                        className="py-8 text-center text-muted-foreground"
-                        colSpan={6}
-                      >
-                        Loading appointments...
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
+                ) : null}
 
-                  {!appointmentsQuery.isLoading && appointments.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        className="py-8 text-center text-muted-foreground"
-                        colSpan={6}
-                      >
-                        No appointments match the current filters.
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
+                {!appointmentsQuery.isLoading && appointments.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      className="py-8 text-center text-muted-foreground"
+                      colSpan={6}
+                    >
+                      No appointments match the current filters.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
 
-                  {appointments.map((appointment) => (
-                    <TableRow key={appointment.id}>
-                      <TableCell className="font-medium">
-                        {appointment.referenceNumber}
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium">
-                          {getPatientName(appointment)}
-                        </p>
-                        {getPatientContact(appointment) ? (
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {getPatientContact(appointment)}
-                          </p>
-                        ) : null}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {appointment.clinic.name}
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium">
-                          {appointment.service.name}
-                        </p>
+                {appointments.map((appointment) => (
+                  <TableRow key={appointment.id}>
+                    <TableCell className="font-medium">
+                      {appointment.referenceNumber}
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium">
+                        {getPatientName(appointment)}
+                      </p>
+                      {getPatientContact(appointment) ? (
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {formatAppointmentRange(appointment)}
+                          {getPatientContact(appointment)}
                         </p>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusVariant(appointment.status)}>
-                          {statusLabels[appointment.status]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          aria-label={`View appointment ${appointment.referenceNumber}`}
-                          className="h-8 w-8 px-0"
-                          onClick={() => openAppointment(appointment)}
-                          type="button"
-                          variant="outline"
-                        >
-                          <Eye aria-hidden className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : null}
-          </CardContent>
-        </Card>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {appointment.clinic.name}
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium">{appointment.service.name}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatAppointmentRange(appointment)}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusVariant(appointment.status)}>
+                        {statusLabels[appointment.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        aria-label={`View appointment ${appointment.referenceNumber}`}
+                        className="h-8 w-8 px-0"
+                        onClick={() => openAppointment(appointment)}
+                        type="button"
+                        variant="outline"
+                      >
+                        <Eye aria-hidden className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : null}
+        </CardContent>
+      </Card>
       <Dialog
         onOpenChange={(open) => {
           if (!open) {
@@ -449,11 +445,15 @@ export function AdminAppointmentsPage() {
                 />
                 <DetailRow
                   label="Contact"
-                  value={selectedAppointment.patientProfile.phone ?? "Not provided"}
+                  value={
+                    selectedAppointment.patientProfile.phone ?? "Not provided"
+                  }
                 />
                 <DetailRow
                   label="Email"
-                  value={selectedAppointment.patientProfile.email ?? "Not provided"}
+                  value={
+                    selectedAppointment.patientProfile.email ?? "Not provided"
+                  }
                 />
                 <DetailRow
                   label="Clinic"

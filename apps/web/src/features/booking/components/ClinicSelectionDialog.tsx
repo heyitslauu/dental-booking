@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle
 } from "../../../components/ui/card";
+import { Link } from "react-router-dom";
 import type { Clinic } from "../types";
 
 type ClinicSelectionDialogProps = {
@@ -47,6 +48,13 @@ export function ClinicSelectionDialog({
             Choose the clinic branch for this dental appointment.
           </AlertDialogDescription>
         </AlertDialogHeader>
+
+        <Link
+          className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:w-fit"
+          to="/"
+        >
+          Return to Homepage
+        </Link>
 
         {isLoading ? (
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
