@@ -2,6 +2,7 @@ import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import { ProtectedAdminRoute } from "../components/admin/ProtectedAdminRoute";
 import { AdminAppointmentsPage } from "../pages/AdminAppointmentsPage";
 import { AdminClinicsPage } from "../pages/AdminClinicsPage";
+import { AdminDashboardPage } from "../pages/AdminDashboardPage";
 import { AdminLoginPage } from "../pages/AdminLoginPage";
 import { AdminServicesPage } from "../pages/AdminServicesPage";
 import { AdminStaffPage } from "../pages/AdminStaffPage";
@@ -39,6 +40,14 @@ export function AppRouter() {
         <Route element={<HomePage />} path="/" />
         <Route element={<LoginPage />} path="/login" />
         <Route element={<AdminLoginPage />} path="/admin/login" />
+        <Route
+          element={
+            <ProtectedAdminRoute>
+              <AdminDashboardPage />
+            </ProtectedAdminRoute>
+          }
+          path="/dashboard"
+        />
         <Route
           element={
             <ProtectedAdminRoute>

@@ -1,6 +1,7 @@
 import {
   CalendarDays,
   ClipboardList,
+  LayoutDashboard,
   LogOut,
   Stethoscope,
   Users,
@@ -19,6 +20,7 @@ import {
 } from "../ui/sidebar";
 
 const adminNavItems = [
+  { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
   {
     activePaths: ["/admin/appointment", "/admin/appointments"],
     icon: CalendarDays,
