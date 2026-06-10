@@ -5,6 +5,7 @@ import { AdminClinicsPage } from "../pages/AdminClinicsPage";
 import { AdminLoginPage } from "../pages/AdminLoginPage";
 import { AdminServicesPage } from "../pages/AdminServicesPage";
 import { AdminStaffPage } from "../pages/AdminStaffPage";
+import { AdminUsersPage } from "../pages/AdminUsersPage";
 import { BookingConfirmationPage } from "../pages/BookingConfirmationPage";
 import { BookingPage } from "../pages/BookingPage";
 import { HomePage } from "../pages/HomePage";
@@ -77,6 +78,14 @@ export function AppRouter() {
             </ProtectedAdminRoute>
           }
           path="/admin/staff"
+        />
+        <Route
+          element={
+            <ProtectedAdminRoute>
+              <AdminUsersPage />
+            </ProtectedAdminRoute>
+          }
+          path="/admin/users"
         />
         <Route element={<BookingPage />} path="/book" />
         <Route element={<BookingConfirmationPage />} path="/booking" />

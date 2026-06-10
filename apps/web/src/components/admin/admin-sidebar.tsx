@@ -3,6 +3,7 @@ import {
   ClipboardList,
   Stethoscope,
   Users,
+  UserCog,
   Smile,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -24,6 +25,7 @@ const adminNavItems = [
   { icon: Smile, label: "Clinics", to: "/admin/clinics" },
   { icon: Stethoscope, label: "Services", to: "/admin/services" },
   { icon: Users, label: "Staff", to: "/admin/staff" },
+  { icon: UserCog, label: "Users", to: "/admin/users" },
 ];
 
 export const getAdminNavTitle = (pathname: string) => {
