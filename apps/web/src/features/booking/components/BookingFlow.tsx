@@ -434,7 +434,7 @@ export function BookingFlow() {
 
       {!selectedClinic ? null : (
         <section className="grid gap-4">
-          <Card>
+          <Card className="border-border bg-card text-card-foreground shadow-lg">
             <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
               <div>
                 <CardTitle>Selected clinic</CardTitle>
@@ -468,10 +468,10 @@ export function BookingFlow() {
                       <button
                         className={`grid w-full justify-items-center gap-2 rounded-md border px-2 py-3 text-center text-xs transition ${
                           isCurrent
-                            ? "border-accent bg-accent/10 text-accent-foreground"
+                            ? "border-primary bg-card text-primary shadow-md"
                             : isComplete
-                              ? "border-primary/20 bg-background text-primary"
-                              : "border-border bg-background text-muted-foreground"
+                              ? "border-primary/30 bg-card text-primary"
+                              : "border-border bg-card/95 text-muted-foreground"
                         } ${canSelect ? "hover:border-accent" : "cursor-not-allowed opacity-60"}`}
                         disabled={!canSelect}
                         onClick={() => handleSelectStep(index)}
@@ -495,7 +495,7 @@ export function BookingFlow() {
                 })}
               </ol>
 
-              <Card>
+              <Card className="border-border bg-card text-card-foreground shadow-lg">
                 <CardContent>
                   {activeStep === 0 ? (
                     <div className="grid gap-6">
