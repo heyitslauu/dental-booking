@@ -21,16 +21,31 @@ const useSidebar = () => {
 
 export const SidebarProvider = ({
   children,
-  defaultOpen = false,
+  defaultOpen,
 }: {
   children: React.ReactNode;
   defaultOpen?: boolean;
 }) => {
-  const [isOpen, setIsOpen] = React.useState(defaultOpen);
+  const [isOpen, setIsOpen] = React.useState(() => {
+    if (defaultOpen !== undefined) {
+      return defaultOpen;
+    }
+
+    return typeof window !== "undefined"
+      ? window.matchMedia("(min-width: 1024px)").matches
+      : false;
+  });
 
   return (
     <SidebarContext.Provider value={{ isOpen, setIsOpen }}>
-      <div className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]">
+      <div
+        className={cn(
+          "min-h-screen overflow-x-hidden bg-background text-foreground lg:grid lg:transition-[grid-template-columns]",
+          isOpen
+            ? "lg:grid-cols-[16rem_minmax(0,1fr)]"
+            : "lg:grid-cols-[0_minmax(0,1fr)]",
+        )}
+      >
         {children}
       </div>
     </SidebarContext.Provider>
@@ -55,8 +70,10 @@ export const Sidebar = ({
       />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-border bg-card text-card-foreground shadow-xl transition-transform lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0 lg:shadow-none",
-          isOpen && "translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-border bg-card text-card-foreground shadow-xl transition-[transform,width] lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0 lg:shadow-none",
+          isOpen
+            ? "translate-x-0 lg:w-64"
+            : "lg:w-0 lg:overflow-hidden lg:border-r-0",
           className,
         )}
         {...props}
@@ -78,11 +95,12 @@ export const SidebarTrigger = ({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"button">) => {
-  const { setIsOpen } = useSidebar();
+  const { isOpen, setIsOpen } = useSidebar();
 
   return (
     <button
       aria-label="Toggle sidebar"
+      aria-expanded={isOpen}
       className={cn(
         "inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className,
